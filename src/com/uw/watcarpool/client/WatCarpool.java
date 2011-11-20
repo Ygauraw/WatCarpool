@@ -1,6 +1,7 @@
 package com.uw.watcarpool.client;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -15,6 +16,7 @@ import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -90,10 +92,10 @@ public class WatCarpool implements EntryPoint {
 	      }
 	    });
 	    
-		final List<String> DAYS = Arrays.asList("Sunday", "Monday",
+		/*final List<String> DAYS = Arrays.asList("Sunday", "Monday",
 			      "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
-		fetchedDriversList.setRowData(0, DAYS);
-        fetchedDriversList.setVisible(true);
+		fetchedDriversList.setRowData(0, DAYS);*/
+        fetchedDriversList.setVisible(false);
 
 		
 		// Passenger
@@ -321,17 +323,38 @@ public class WatCarpool implements EntryPoint {
 								}
 
 								public void onSuccess(List<Driver> drivers) {
-									passengerDialog.setText("Confirmed");
-									passengerDialog.center();
-									passengerSubmitBtn.setFocus(true);
+									passengerDialog.hide();	
+									if(drivers!=null)
+									{
+									populateDrivers(drivers, fetchedDriversList);
+									passengerBtn.setEnabled(true);
+									}
+									else
+									{
+										fetchedDriversList.setVisible(false);
+										Window.alert("No matched carpools at this time, we'll notify you once matched carpool(s) entered in to your system");
+									    passengerBtn.setEnabled(true);
+									}
 								}
 							});
 
 				}		
 		});
 
-		
+
 	}
+	 private void populateDrivers(List<Driver> drivers, CellList fetchedDriversList)
+	 {
+		 List<String> driversList = new ArrayList<String>();
+		 for (Driver d: drivers)
+		 {
+			 driversList.add("Call #:" +d._contact + " Pickup: "+d._pickupLoc +" Depature Time: "+d._date.toString());
+		 }
+		 fetchedDriversList.setRowData(0, driversList);
+	     fetchedDriversList.setVisible(true);
+	 }
+	 
+
 	
 	
 }
