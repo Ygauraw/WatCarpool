@@ -13,6 +13,7 @@
 
   <!-- Other module inherits                                      -->
   <inherits name="com.googlecode.objectify.Objectify" />
+ 
   <!-- Specify the app entry point class.                         -->
   <entry-point class='com.uw.watcarpool.client.WatCarpool'/>
 

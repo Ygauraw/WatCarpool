@@ -1,12 +1,8 @@
 package com.uw.watcarpool.client;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import com.uw.watcarpool.shared.FieldVerifier;
-import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -14,8 +10,8 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
-import com.google.gwt.user.cellview.client.CellList;
-import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
+import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
@@ -27,8 +23,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.datepicker.client.DateBox;
-import com.google.gwt.view.client.SelectionChangeEvent;
-import com.google.gwt.view.client.SingleSelectionModel;
+import com.google.gwt.view.client.ListDataProvider;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -75,29 +70,69 @@ public class WatCarpool implements EntryPoint {
 		final TextBox dropoffLoc = new TextBox();
 		final TextBox availSpots = new TextBox();
 		
-		// Fetched Result CellList
-		final TextCell fetchedDrivers = new TextCell();
-		final CellList<String> fetchedDriversList = new CellList<String>(fetchedDrivers); 
-		fetchedDriversList.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.ENABLED);
-
-	    // Add a selection model to handle user selection.
-		final SingleSelectionModel<String> selectionModel = new SingleSelectionModel<String>();
-	    fetchedDriversList.setSelectionModel(selectionModel);
-	    selectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
-	      public void onSelectionChange(SelectionChangeEvent event) {
-	        String selected = selectionModel.getSelectedObject();
-	        if (selected != null) {
-	          
-	        }
-	      }
-	    });
-	    
-		/*final List<String> DAYS = Arrays.asList("Sunday", "Monday",
-			      "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
-		fetchedDriversList.setRowData(0, DAYS);*/
-        fetchedDriversList.setVisible(false);
-
+		// Fetched Drivers' Table
+		final CellTable<Driver> dTable = new CellTable<Driver>();
 		
+		//Contact Column
+		TextColumn<Driver> dContactCol = new TextColumn<Driver>() {
+		      @Override
+		      public String getValue(Driver d) {
+		        return d._contact;
+		      }
+		    };
+
+		 
+		    
+		//Date/Time Column
+		TextColumn<Driver> dDateTimeCol = new TextColumn<Driver>() {
+			      @Override
+			      public String getValue(Driver d) {
+			        return d._date.toString();
+			      }
+			    };
+
+			   
+
+	    
+	    //Pickup Location Column
+	    TextColumn<Driver> dPickupCol = new TextColumn<Driver>() {
+	    	@Override
+	    	public String getValue(Driver d) {
+	    		return d._pickupLoc.toString();
+	    	}
+	    };
+	    
+	    //Dropoff Location Column
+		TextColumn<Driver> dDropoffCol = new TextColumn<Driver>() {
+		      @Override
+		      public String getValue(Driver d) {
+		        return d._dropoffLoc.toString();
+		      }
+		    };
+		    
+	    //Spots Location Column
+		TextColumn<Driver> dSpotsCol = new TextColumn<Driver>() {
+		      @Override
+		      public String getValue(Driver d) {
+		        return d._spots+"";
+		      }
+		    };
+		//Add those columns to the drivers' table
+		dTable.addColumn(dContactCol, "Contact Number");
+		dTable.addColumn(dDateTimeCol, "Carpool Date");
+		dTable.addColumn(dPickupCol, "Pickup Location");
+		dTable.addColumn(dDropoffCol, "Dropoff Location");
+		dTable.addColumn(dSpotsCol, "Available Spots");
+		dTable.setTitle("Available Carpools");
+		
+		    
+		// Create a data provider.
+		final ListDataProvider<Driver> driverDataProvider = new ListDataProvider<Driver>();
+		driverDataProvider.addDataDisplay(dTable);
+		
+        //Hide the drivers table when there is no data 
+		dTable.setVisible(false);
+        
 		// Passenger
 		final Button passengerBtn = new Button("Find a Carpool");
 		passengerBtn.addStyleName("openInputButton");
@@ -176,7 +211,7 @@ public class WatCarpool implements EntryPoint {
 		RootPanel.get("driverButtonContainer").add(driverBtn);
 		RootPanel.get("passengerButtonContainer").add(passengerBtn);
 		RootPanel.get("errorLabelContainer").add(errorLabel);
-		RootPanel.get("fetchedDriversContainer").add(fetchedDriversList);
+		RootPanel.get("fetchedDriversContainer").add(dTable);
 		
 		
 
@@ -193,10 +228,25 @@ public class WatCarpool implements EntryPoint {
 			 */
 			public void onClick(ClickEvent event) {
 				
-				//driverBtn.setEnabled(false);
-				driverDialog.setText("Tell us a little bit more...");
-				driverDialog.center();
-				driverSubmitBtn.setFocus(true);				
+				
+				//hide previous open tables
+				dTable.setVisible(false);
+				
+				//validate contact number
+				String contact = contactField.getText();
+				if (FieldVerifier.isValidContact(contact)) {
+					errorLabel.setText(""); //remove the previous error message if any;
+					driverDialog.setText("Tell us a little bit more...");
+					driverDialog.center();
+					driverSubmitBtn.setFocus(true);	
+				}
+				else
+				{
+					errorLabel.setText("Oops, please enter your 10 digits contact # (e.g. 5191234567)");
+					return;
+				}
+
+			
 			}
 	
 			/**
@@ -221,10 +271,24 @@ public class WatCarpool implements EntryPoint {
 			 */
 			public void onClick(ClickEvent event) {
 				
-				//passengerBtn.setEnabled(false);
-				passengerDialog.setText("Tell us a little bit more...");
-				passengerDialog.center();
-				passengerSubmitBtn.setFocus(true);				
+				//hide previous open tables
+				dTable.setVisible(false);
+				
+				//validate contact number
+				String contact = contactField.getText();
+				if (FieldVerifier.isValidContact(contact)) {
+					errorLabel.setText(""); //remove the previous error message if any;
+					passengerDialog.setText("Tell us a little bit more...");
+					passengerDialog.center();
+					passengerSubmitBtn.setFocus(true);			
+				}
+				else
+				{
+					errorLabel.setText("Oops, please enter your 10 digits contact # (e.g. 5191234567)");
+					return;
+				}
+
+					
 			}
 
 			/**
@@ -266,12 +330,7 @@ public class WatCarpool implements EntryPoint {
 			public void onClick(ClickEvent event) {
 					// First, we validate the input.
 					errorLabel.setText("");
-					String contact = contactField.getText();
-					if (!FieldVerifier.isValidName(contact)) {
-						errorLabel.setText("Please enter at least four characters");
-						return;
-					}
-
+					
 					// Then, we send the input to the server.
 					driverBtn.setEnabled(false);
 					
@@ -301,12 +360,6 @@ public class WatCarpool implements EntryPoint {
 			public void onClick(ClickEvent event) {
 					// First, we validate the input.
 					errorLabel.setText("");
-					String contact = contactField.getText();
-					if (!FieldVerifier.isValidName(contact)) {
-						errorLabel.setText("Please enter at least four characters");
-						return;
-					}
-
 					// Then, we send the input to the server.
 					passengerBtn.setEnabled(false);
 					
@@ -325,13 +378,14 @@ public class WatCarpool implements EntryPoint {
 								public void onSuccess(List<Driver> drivers) {
 									passengerDialog.hide();	
 									if(drivers!=null)
-									{
-									populateDrivers(drivers, fetchedDriversList);
+									{									
+									populateDrivers(driverDataProvider, drivers);
 									passengerBtn.setEnabled(true);
+									dTable.setVisible(true);
 									}
 									else
 									{
-										fetchedDriversList.setVisible(false);
+										dTable.setVisible(false);
 										Window.alert("No matched carpools at this time, we'll notify you once matched carpool(s) entered in to your system");
 									    passengerBtn.setEnabled(true);
 									}
@@ -343,15 +397,17 @@ public class WatCarpool implements EntryPoint {
 
 
 	}
-	 private void populateDrivers(List<Driver> drivers, CellList fetchedDriversList)
+	 private void populateDrivers(ListDataProvider<Driver> dataProvider, List<Driver> fetchedDrivers)
 	 {
-		 List<String> driversList = new ArrayList<String>();
-		 for (Driver d: drivers)
-		 {
-			 driversList.add("Call #:" +d._contact + " Pickup: "+d._pickupLoc +" Depature Time: "+d._date.toString());
-		 }
-		 fetchedDriversList.setRowData(0, driversList);
-	     fetchedDriversList.setVisible(true);
+		// Add the data to the data provider, which automatically pushes it to the widget
+		    
+		    List<Driver> drivers = dataProvider.getList();
+		    drivers.clear();
+		    for (Driver d: fetchedDrivers)
+		    {
+		    	drivers.add(d);
+		    }
+		    
 	 }
 	 
 

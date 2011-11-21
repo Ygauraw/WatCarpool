@@ -1,6 +1,9 @@
 package com.uw.watcarpool.server;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import com.googlecode.objectify.Query;
@@ -44,14 +47,20 @@ public class DataStoreServiceImpl extends RemoteServiceServlet implements
 		//Return the filtered results to the client
 	    if (ret.size()!=0)
 	    {
-	    	for (Driver d :ret)
-	    	{
-	    		System.out.println("------------------");
-	    		System.out.println(d._contact);
-	    		System.out.println(d._dropoffLoc);
-	    		System.out.println(d._date.toString());
-
-	    	}
+	    	//Sort the output list according to date.
+	    	Collections.sort(ret, new Comparator(){ 
+	    		public int compare(Object d1, Object d2){    		       
+	    	        Date d1Date = ((Driver)d1)._date;        
+	    	        Date d2Date = ((Driver)d2)._date;	    	       
+	    	        if(d1Date.after(d2Date))
+	    	            return 1;
+	    	        else if(d1Date.before(d2Date))
+	    	            return -1;
+	    	        else
+	    	            return 0;    
+	    	    }
+	    	});
+	    	
 	    	return ret;
 	    	
 	    }
@@ -92,14 +101,6 @@ public class DataStoreServiceImpl extends RemoteServiceServlet implements
 		//Return the filtered results to the client
 	    if (ret.size()!=0)
 	    {
-	    	for (Passenger p :ret)
-	    	{
-	    		System.out.println("------------------");
-	    		System.out.println(p._contact);
-	    		System.out.println(p._dropoffLoc);
-	    		System.out.println(p._date.toString());
-
-	    	}
 	    	return ret;
 	    	
 	    }
@@ -114,13 +115,6 @@ public class DataStoreServiceImpl extends RemoteServiceServlet implements
 	    }
 	}
 
-
-      
-		
-		
-		
-        
-	
-	
+	 
 	
 }

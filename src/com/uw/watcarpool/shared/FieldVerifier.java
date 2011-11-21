@@ -1,5 +1,10 @@
 package com.uw.watcarpool.shared;
 
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
+
+
+
 /**
  * <p>
  * FieldVerifier validates that the name the user enters is valid.
@@ -33,10 +38,26 @@ public class FieldVerifier {
 	 * @param name the name to validate
 	 * @return true if valid, false if invalid
 	 */
-	public static boolean isValidName(String name) {
-		if (name == null) {
-			return false;
-		}
-		return name.length() > 3;
-	}
+	public static boolean isValidContact(String number) {
+		boolean isValid = false;  
+		  
+		/*Number: A numeric value will have following format: 
+		         ^[-+]?: Starts with an optional "+" or "-" sign. 
+		     [0-9]*: May have one or more digits. 
+		    \\.? : May contain an optional "." (decimal point) character. 
+		    [0-9]+$ : ends with numeric digit. 
+		*/  
+		  
+		//Initialize reg ex for numeric data.  
+		String expression = "^[-+]?[0-9]*\\.?[0-9]+$";  
+
+		
+		RegExp regExp = RegExp.compile(expression);
+		
+		if(regExp.test(number) && number.length()==10){  
+	   		isValid = true;  
+		}  
+		
+		return isValid;  
+ }
 }
