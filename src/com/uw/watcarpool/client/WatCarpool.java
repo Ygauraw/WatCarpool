@@ -2,6 +2,8 @@ package com.uw.watcarpool.client;
 
 
 import java.util.List;
+
+import com.uw.watcarpool.shared.ClientUtilities;
 import com.uw.watcarpool.shared.FieldVerifier;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
@@ -51,7 +53,7 @@ public class WatCarpool implements EntryPoint {
 		final TextBox contactField = new TextBox();
 		
 		final Label errorLabel = new Label();
-		contactField.setText("GWT User");
+		contactField.setTitle("e.g. 5191234567");
 		// Focus the cursor on the name field when the app loads
 		contactField.setFocus(true);
 		contactField.selectAll();
@@ -237,8 +239,7 @@ public class WatCarpool implements EntryPoint {
 				if (FieldVerifier.isValidContact(contact)) {
 					errorLabel.setText(""); //remove the previous error message if any;
 					driverDialog.setText("Tell us a little bit more...");
-					driverDialog.center();
-					driverSubmitBtn.setFocus(true);	
+					driverDialog.center();	
 				}
 				else
 				{
@@ -279,8 +280,7 @@ public class WatCarpool implements EntryPoint {
 				if (FieldVerifier.isValidContact(contact)) {
 					errorLabel.setText(""); //remove the previous error message if any;
 					passengerDialog.setText("Tell us a little bit more...");
-					passengerDialog.center();
-					passengerSubmitBtn.setFocus(true);			
+					passengerDialog.center();			
 				}
 				else
 				{
@@ -379,7 +379,7 @@ public class WatCarpool implements EntryPoint {
 									passengerDialog.hide();	
 									if(drivers!=null)
 									{									
-									populateDrivers(driverDataProvider, drivers);
+									ClientUtilities.populateDrivers(driverDataProvider, drivers);
 									passengerBtn.setEnabled(true);
 									dTable.setVisible(true);
 									}
@@ -397,20 +397,7 @@ public class WatCarpool implements EntryPoint {
 
 
 	}
-	 private void populateDrivers(ListDataProvider<Driver> dataProvider, List<Driver> fetchedDrivers)
-	 {
-		// Add the data to the data provider, which automatically pushes it to the widget
-		    
-		    List<Driver> drivers = dataProvider.getList();
-		    drivers.clear();
-		    for (Driver d: fetchedDrivers)
-		    {
-		    	drivers.add(d);
-		    }
-		    
-	 }
 	 
-
 	
 	
 }

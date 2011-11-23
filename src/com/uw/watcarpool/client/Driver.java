@@ -7,12 +7,10 @@ import javax.persistence.Id;
 import javax.persistence.Transient;
 
 public class Driver implements Serializable {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -8579153469193697946L;
-	@Id public Long id;
-    @Transient String doNotPersist;
+
+ private static final long serialVersionUID = -8579153469193697946L;
+ @Id public Long id;
+ @Transient String doNotPersist;
  public String _contact;
  public Date _date;
  public String _pickupLoc; 

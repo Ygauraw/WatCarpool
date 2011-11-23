@@ -7,11 +7,9 @@ import javax.persistence.Id;
 import javax.persistence.Transient;
 
 public class Passenger implements Serializable {
- /**
-	 * 
-	 */
-	private static final long serialVersionUID = -3985879017430394322L;
-@Id public Long id;
+
+ private static final long serialVersionUID = -3985879017430394322L;
+ @Id public Long id;
  @Transient String doNotPersist;
  public String _contact;
  public Date _date;

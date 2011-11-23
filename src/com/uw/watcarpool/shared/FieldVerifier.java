@@ -40,18 +40,8 @@ public class FieldVerifier {
 	 */
 	public static boolean isValidContact(String number) {
 		boolean isValid = false;  
-		  
-		/*Number: A numeric value will have following format: 
-		         ^[-+]?: Starts with an optional "+" or "-" sign. 
-		     [0-9]*: May have one or more digits. 
-		    \\.? : May contain an optional "." (decimal point) character. 
-		    [0-9]+$ : ends with numeric digit. 
-		*/  
-		  
-		//Initialize reg ex for numeric data.  
+	  
 		String expression = "^[-+]?[0-9]*\\.?[0-9]+$";  
-
-		
 		RegExp regExp = RegExp.compile(expression);
 		
 		if(regExp.test(number) && number.length()==10){  
