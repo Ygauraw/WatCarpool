@@ -1,6 +1,7 @@
 package com.uw.watcarpool.client;
 
 
+import java.util.Date;
 import java.util.List;
 import com.uw.watcarpool.shared.ClientUtilities;
 import com.uw.watcarpool.shared.FieldVerifier;
@@ -13,6 +14,7 @@ import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Anchor;
@@ -56,7 +58,7 @@ public class WatCarpool implements EntryPoint {
 	private Label loginLabel = new Label("");
 	private Anchor signInLink = new Anchor(" Sign In ");
 	private Anchor signOutLink = new Anchor(" Sign Out ");
-
+    
     final TextBox contactField = new TextBox();
 	final Label errorLabel = new Label();
 	final Button driverBtn = new Button("Offer a Carpool");	
@@ -93,12 +95,20 @@ public class WatCarpool implements EntryPoint {
 	
 	private void loadGWTComponents()
 	{
+		// Set cookie for this session
+		String path=GWT.getModuleBaseURL();
+		path=path.substring(0, path.length()-1);
+		int index=path.lastIndexOf('/');
+		path=path.substring(index);
+		Cookies.setCookie("JSESSIONID", "", new Date(0), null, path, false);
 		// Init Login Panel
 		loginPanel.addStyleName("loginPanel");
 		loginPanel.add(loginIcon);
 		loginPanel.add(loginLabel);
 	    loginPanel.add(signInLink);
 	    loginPanel.add(signOutLink);
+	    loginLabel.setVisible(false);
+	    loginLabel.setVisible(false);
 	    
 		
 		// Init Contact TextBox
@@ -220,9 +230,9 @@ public class WatCarpool implements EntryPoint {
 	      }
 
 	      public void onSuccess(LoginInfo result) {
-	    	System.out.println("called once");
 	        loginInfo = result;
 	        if(loginInfo.isLoggedIn()) {
+	        	
 	        	loginLabel.setText("Welcome, "+result.getEmailAddress());
 	        	loginLabel.setVisible(true);
 	 		    signOutLink.setHref(loginInfo.getLogoutUrl());
@@ -230,6 +240,11 @@ public class WatCarpool implements EntryPoint {
 	        	signInLink.setVisible(false);
 	  
 	        } else {
+	    		String path=GWT.getModuleBaseURL();
+	    		path=path.substring(0, path.length()-1);
+	    		int index=path.lastIndexOf('/');
+	    		path=path.substring(index);
+	    		Cookies.removeCookie("JSESSIONID", path);
 	        	signInLink.setHref(loginInfo.getLoginUrl());
 	         	signInLink.setVisible(true);
 	 		    signOutLink.setVisible(false);
@@ -240,17 +255,12 @@ public class WatCarpool implements EntryPoint {
 		/**
 		 * Handlers for different button
 		 */
-
-		
-		
 	    // Add a handler to driver's button
 		class DriverDialogHanlder implements ClickHandler, KeyUpHandler {
 			/**
 			 * Fired when the user clicks on the driverBtn.
 			 */
 			public void onClick(ClickEvent event) {
-				
-				
 				//hide previous open tables
 				dTable.setVisible(false);
 				
@@ -268,7 +278,6 @@ public class WatCarpool implements EntryPoint {
 				}
 
 			}
-			
 	
 			/**
 			 * Fired when the user types in the contactField.
