@@ -28,7 +28,12 @@ h1 {
   color: red;
 }
 
+
 /** Set ids using widget.getElement().setId("idOfElement") */
 #closeButton {
   margin: 15px 6px 6px;
+}
+
+#loginPanel .gwt-Anchor {
+    margin-left: 10px;
 }

@@ -2,7 +2,6 @@ package com.uw.watcarpool.client;
 
 
 import java.util.List;
-
 import com.uw.watcarpool.shared.ClientUtilities;
 import com.uw.watcarpool.shared.FieldVerifier;
 import com.google.gwt.core.client.EntryPoint;
@@ -16,10 +15,12 @@ import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
@@ -40,63 +41,90 @@ public class WatCarpool implements EntryPoint {
 			+ "connection and try again.";
 
 	/**
-	 * Create a remote service proxy to talk to the server-side Greeting service.
+	 * Create remote service proxy to talk to the server-side Greeting service.
 	 */
-	private final DataStoreServiceAsync dataStoreService = GWT
-			.create(DataStoreService.class);
-    
+	private final DataStoreServiceAsync dataStoreService = GWT.create(DataStoreService.class);  //GAE DataStore
+	private LoginServiceAsync loginService = GWT.create(LoginService.class); //GAE UserService
+	
+
+	/**
+	 * GUI Components
+	 */
+   // Declare Login components
+	private LoginInfo loginInfo = null;
+	private HorizontalPanel loginPanel = new HorizontalPanel();
+	private Label loginLabel = new Label("");
+	private Anchor signInLink = new Anchor(" Sign In ");
+	private Anchor signOutLink = new Anchor(" Sign Out ");
+
+    final TextBox contactField = new TextBox();
+	final Label errorLabel = new Label();
+	final Button driverBtn = new Button("Offer a Carpool");	
+	final Button driverCloseBtn = new Button("Close");
+	final DateBox carpoolDate = new DateBox();
+	final TextBox pickupLoc = new TextBox();
+	final TextBox dropoffLoc = new TextBox();
+	final TextBox availSpots = new TextBox();
+	final CellTable<Driver> dTable = new CellTable<Driver>();
+	final ListDataProvider<Driver> driverDataProvider = new ListDataProvider<Driver>();
+	final Button passengerBtn = new Button("Find a Carpool");
+	final Button passengerCloseBtn = new Button("Close");
+	final DateBox tripDate = new DateBox();
+	final TextBox destination = new TextBox();
+	final TextBox numPassengers = new TextBox();
+	final DialogBox driverDialog = new DialogBox();
+	final Button driverSubmitBtn = new Button("Go");
+	final VerticalPanel driverDialogPanel = new VerticalPanel();
+	final HorizontalPanel driverButtonPanel = new HorizontalPanel();
+	final DialogBox passengerDialog = new DialogBox();
+	final Button passengerSubmitBtn = new Button("Go");
+	final VerticalPanel passengerDialogPanel = new VerticalPanel();
+	final HorizontalPanel passengerButtonPanel = new HorizontalPanel();
+	final Image loginIcon= new Image("/login.png");
+	
 	/**
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
-		// Declare and initialize all the GUI components based on the root panel
-		final TextBox contactField = new TextBox();
 		
-		final Label errorLabel = new Label();
-		contactField.setTitle("e.g. 5191234567");
-		// Focus the cursor on the name field when the app loads
+	   loadGWTComponents();
+
+	}
+	
+	private void loadGWTComponents()
+	{
+		// Init Login Panel
+		loginPanel.addStyleName("loginPanel");
+		loginPanel.add(loginIcon);
+		loginPanel.add(loginLabel);
+	    loginPanel.add(signInLink);
+	    loginPanel.add(signOutLink);
+	    
+		
+		// Init Contact TextBox
+	    contactField.setTitle("e.g. 5191234567");
 		contactField.setFocus(true);
 		contactField.selectAll();
-
-		
-		// Driver
-		final Button driverBtn = new Button("Offer a Carpool");
-		driverBtn.addStyleName("openInputButton");
-		final Button driverCloseBtn = new Button("Close");	
-		//driverCloseBtn.getElement().setId("closeButton");// We can set the id of a widget by accessing its Element
 		
 		
-		
-		final DateBox carpoolDate = new DateBox();
-		final TextBox pickupLoc = new TextBox();
-		final TextBox dropoffLoc = new TextBox();
-		final TextBox availSpots = new TextBox();
-		
-		// Fetched Drivers' Table
-		final CellTable<Driver> dTable = new CellTable<Driver>();
-		
-		//Contact Column
+		// Init Results Table
+		// Contact Column
 		TextColumn<Driver> dContactCol = new TextColumn<Driver>() {
 		      @Override
 		      public String getValue(Driver d) {
 		        return d._contact;
 		      }
 		    };
-
-		 
-		    
-		//Date/Time Column
+    
+		// Date/Time Column
 		TextColumn<Driver> dDateTimeCol = new TextColumn<Driver>() {
 			      @Override
 			      public String getValue(Driver d) {
 			        return d._date.toString();
 			      }
 			    };
-
-			   
-
-	    
-	    //Pickup Location Column
+			    
+	    // Pickup Location Column
 	    TextColumn<Driver> dPickupCol = new TextColumn<Driver>() {
 	    	@Override
 	    	public String getValue(Driver d) {
@@ -104,7 +132,7 @@ public class WatCarpool implements EntryPoint {
 	    	}
 	    };
 	    
-	    //Dropoff Location Column
+	    // Dropoff Location Column
 		TextColumn<Driver> dDropoffCol = new TextColumn<Driver>() {
 		      @Override
 		      public String getValue(Driver d) {
@@ -112,47 +140,31 @@ public class WatCarpool implements EntryPoint {
 		      }
 		    };
 		    
-	    //Spots Location Column
+	    // Spots Location Column
 		TextColumn<Driver> dSpotsCol = new TextColumn<Driver>() {
 		      @Override
 		      public String getValue(Driver d) {
 		        return d._spots+"";
 		      }
 		    };
-		//Add those columns to the drivers' table
+		    
+		// Add those columns to the drivers' table
 		dTable.addColumn(dContactCol, "Contact Number");
 		dTable.addColumn(dDateTimeCol, "Carpool Date");
 		dTable.addColumn(dPickupCol, "Pickup Location");
 		dTable.addColumn(dDropoffCol, "Dropoff Location");
 		dTable.addColumn(dSpotsCol, "Available Spots");
 		dTable.setTitle("Available Carpools");
-		
 		    
 		// Create a data provider.
-		final ListDataProvider<Driver> driverDataProvider = new ListDataProvider<Driver>();
 		driverDataProvider.addDataDisplay(dTable);
-		
+
         //Hide the drivers table when there is no data 
 		dTable.setVisible(false);
         
-		// Passenger
-		final Button passengerBtn = new Button("Find a Carpool");
-		passengerBtn.addStyleName("openInputButton");
-		final Button passengerCloseBtn = new Button("Close");
-		//passengerCloseBtn.getElement().setId("closeButton");
 		
-		final DateBox tripDate = new DateBox();
-		final TextBox destination = new TextBox();
-		final TextBox numPassengers = new TextBox();
-		
-
-		// Declare and initialize all the GUI components on the pop-up dialog panels
-		// Driver
-		final DialogBox driverDialog = new DialogBox();
-		final Button driverSubmitBtn = new Button("Go");
-		final VerticalPanel driverDialogPanel = new VerticalPanel();
-		final HorizontalPanel driverButtonPanel = new HorizontalPanel();
-		
+		// Init Driver Components
+		driverBtn.addStyleName("openInputButton");
 		driverDialog.setText("Basic Carpool Info");
 		driverDialog.setAnimationEnabled(true);	
         driverSubmitBtn.getElement().setId("driverSubmitBtn");       
@@ -160,9 +172,7 @@ public class WatCarpool implements EntryPoint {
         driverDialogPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);
 		driverDialog.setWidget(driverDialogPanel);
 
-       
-        
-        // Create input fields
+        // Init Driver Input Panel
 		driverDialogPanel.add(new HTML("<b>Date/Time:</b><br>"));
 		driverDialogPanel.add(carpoolDate);
 	    driverDialogPanel.add(new HTML("<br><b>Pickup Location:</b><br>"));
@@ -178,12 +188,8 @@ public class WatCarpool implements EntryPoint {
 		driverDialogPanel.add(driverButtonPanel);
 		
 		
-		// Passenger
-		final DialogBox passengerDialog = new DialogBox();
-		final Button passengerSubmitBtn = new Button("Go");
-		final VerticalPanel passengerDialogPanel = new VerticalPanel();
-		final HorizontalPanel passengerButtonPanel = new HorizontalPanel();
-		
+		// Init Passenger Components
+	    passengerBtn.addStyleName("openInputButton");
 		passengerDialog.setAnimationEnabled(true);	
 		passengerSubmitBtn.getElement().setId("passengerSubmitBtn");
 		passengerDialogPanel.addStyleName("passengerDialogPanel");
@@ -191,7 +197,7 @@ public class WatCarpool implements EntryPoint {
 		passengerDialogPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);
 		
 		
-		// Create input fields
+		// Init Passenger Input Panel
 		passengerDialogPanel.add(new HTML("<b>Date/Time:</b><br>"));	
 		passengerDialogPanel.add(tripDate);		
 		passengerDialogPanel.add(new HTML("<br><b>Drop-off Location:</b><br>"));
@@ -204,26 +210,40 @@ public class WatCarpool implements EntryPoint {
 		passengerButtonPanel.add(passengerSubmitBtn);
 		passengerButtonPanel.add(passengerCloseBtn);
 		passengerDialogPanel.add(passengerButtonPanel);
+		
+		
+		//Verify Login Status
+	    loginService.login(GWT.getHostPageBaseURL(), new AsyncCallback<LoginInfo>() {
+	      public void onFailure(Throwable error) {
+	    	  Window.alert("Request remote service failed...");
+	    	  error.printStackTrace();
+	      }
+
+	      public void onSuccess(LoginInfo result) {
+	    	System.out.println("called once");
+	        loginInfo = result;
+	        if(loginInfo.isLoggedIn()) {
+	        	loginLabel.setText("Welcome, "+result.getEmailAddress());
+	        	loginLabel.setVisible(true);
+	 		    signOutLink.setHref(loginInfo.getLogoutUrl());
+	        	signOutLink.setVisible(true);
+	        	signInLink.setVisible(false);
+	  
+	        } else {
+	        	signInLink.setHref(loginInfo.getLoginUrl());
+	         	signInLink.setVisible(true);
+	 		    signOutLink.setVisible(false);
+	        }
+	      }
+	    });
+		
+		/**
+		 * Handlers for different button
+		 */
 
 		
 		
-		// Add the GUI components to the RootPanel
-		// Use RootPanel.get() to get the entire body element
-		RootPanel.get("contactFieldContainer").add(contactField);
-		RootPanel.get("driverButtonContainer").add(driverBtn);
-		RootPanel.get("passengerButtonContainer").add(passengerBtn);
-		RootPanel.get("errorLabelContainer").add(errorLabel);
-		RootPanel.get("fetchedDriversContainer").add(dTable);
-		
-		
-
-
-        /**     
-         * Add button handlers       
-         */
-		
-		
-	// Add a handler to driver's button
+	    // Add a handler to driver's button
 		class DriverDialogHanlder implements ClickHandler, KeyUpHandler {
 			/**
 			 * Fired when the user clicks on the driverBtn.
@@ -247,8 +267,8 @@ public class WatCarpool implements EntryPoint {
 					return;
 				}
 
-			
 			}
+			
 	
 			/**
 			 * Fired when the user types in the contactField.
@@ -259,13 +279,13 @@ public class WatCarpool implements EntryPoint {
 				}
 			}
 		}
-	
+
 		// Associate the handler with the button
 		DriverDialogHanlder driverHandler = new DriverDialogHanlder();
 		driverBtn.addClickHandler(driverHandler);
 
-			
-	  // Add a handler to passenger's button
+	    
+	   // Add a handler to passenger's button
 		class PassengerDialogHanlder implements ClickHandler, KeyUpHandler {
 			/**
 			 * Fired when the user clicks on the passengerBtn.
@@ -286,9 +306,7 @@ public class WatCarpool implements EntryPoint {
 				{
 					errorLabel.setText("Oops, please enter your 10 digits contact # (e.g. 5191234567)");
 					return;
-				}
-
-					
+				}		
 			}
 
 			/**
@@ -324,7 +342,9 @@ public class WatCarpool implements EntryPoint {
 			}
 		});
 		
+		
 
+	    
 		// Add a handler to driver's submit button
 		driverSubmitBtn.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
@@ -339,8 +359,7 @@ public class WatCarpool implements EntryPoint {
 							new AsyncCallback<List<Passenger>>() {
 								public void onFailure(Throwable caught) {
 									// Show the RPC error message to the user
-									driverDialog
-											.setText("Oops..");
+									driverDialog.setText("Request failed...");
 									driverDialog.center();
 									driverSubmitBtn.setFocus(true);
 									caught.printStackTrace();
@@ -368,8 +387,7 @@ public class WatCarpool implements EntryPoint {
 							new AsyncCallback<List<Driver>>() {
 								public void onFailure(Throwable caught) {
 									// Show the RPC error message to the user
-									passengerDialog
-											.setText("Oops..");					
+									passengerDialog.setText("Request failed...");					
 									passengerDialog.center();
 									passengerSubmitBtn.setFocus(true);
 									caught.printStackTrace();
@@ -388,16 +406,23 @@ public class WatCarpool implements EntryPoint {
 										dTable.setVisible(false);
 										Window.alert("No matched carpools at this time, we'll notify you once matched carpool(s) entered in to your system");
 									    passengerBtn.setEnabled(true);
+									    Window.Location.reload();
 									}
 								}
 							});
 
 				}		
 		});
+		
 
-
+		// Add the GUI components to the RootPanel
+		RootPanel.get("loginPanel").add(loginPanel);
+		RootPanel.get("contactFieldContainer").add(contactField);
+		RootPanel.get("driverButtonContainer").add(driverBtn);
+		RootPanel.get("passengerButtonContainer").add(passengerBtn);
+		RootPanel.get("errorLabelContainer").add(errorLabel);
+		RootPanel.get("fetchedDriversContainer").add(dTable);
 	}
 	 
-	
-	
+	  
 }

@@ -2,8 +2,6 @@ package com.uw.watcarpool.client;
 
 import java.util.Date;
 import java.util.List;
-
-import com.google.appengine.api.datastore.Entity;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("dataStore")

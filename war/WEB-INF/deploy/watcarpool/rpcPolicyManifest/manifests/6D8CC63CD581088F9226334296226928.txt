@@ -1,0 +1,2 @@
+serviceClass: com.uw.watcarpool.client.LoginService
+path: D4B6D5B455487DF6286C0716B56E41E0.gwt.rpc

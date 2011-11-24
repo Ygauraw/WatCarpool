@@ -24,6 +24,7 @@ public class DataStoreServiceImpl extends RemoteServiceServlet implements
 	    ObjectifyService.register(Driver.class);
 		}
 	
+	@SuppressWarnings("unchecked")
 	public List<Driver> checkDrivers(String kind, String name, String contact, Date date, String pickupLoc, String dropoffLoc, int spots)
 			throws IllegalArgumentException {
 		

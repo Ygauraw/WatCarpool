@@ -5,7 +5,6 @@
          version="2.5"
          xmlns="http://java.sun.com/xml/ns/javaee">
 
-  <!-- Servlets -->
   
   <servlet>
     <servlet-name>dataStoreServlet</servlet-name>
@@ -16,6 +15,17 @@
     <servlet-name>dataStoreServlet</servlet-name>
     <url-pattern>/watcarpool/dataStore</url-pattern>
   </servlet-mapping>
+  
+  
+  <servlet>
+        <servlet-name>loginService</servlet-name>
+        <servlet-class>com.uw.watcarpool.server.LoginServiceImpl</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>loginService</servlet-name>
+        <url-pattern>/watcarpool/login</url-pattern>
+    </servlet-mapping>
   
   <!-- Default page to serve -->
   <welcome-file-list>

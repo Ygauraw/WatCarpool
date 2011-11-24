@@ -6,6 +6,7 @@ import com.google.gwt.view.client.ListDataProvider;
 import com.uw.watcarpool.client.Driver;
 
 public class ClientUtilities {
+	 private static String clientIdentity=null;
 	 public static void populateDrivers(ListDataProvider<Driver> dataProvider, List<Driver> fetchedDrivers)
 	 {
 		// Add the data to the data provider, which automatically pushes it to the widget
@@ -18,4 +19,16 @@ public class ClientUtilities {
 		    }
 		    
 	 }
+	 
+	 public static void setClientIdentity(String identity)
+	 {
+		 clientIdentity=identity;
+	 }
+	 
+	 public static String getClientIdentity()
+	 {
+		return  clientIdentity;
+	 }
+	 
+	 
 }
