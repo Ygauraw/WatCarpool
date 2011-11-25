@@ -16,9 +16,10 @@ public class Passenger implements Serializable {
  public String _pickupLoc; 
  public String _dropoffLoc; 
  int _spots;
+ public String _userId;
  
  private Passenger(){};
- public Passenger (String contact, Date date, String pickupLoc, String dropoffLoc, int spots)
+ public Passenger (String contact, Date date, String pickupLoc, String dropoffLoc, int spots,  String userId)
  {
 
 	 this._contact=contact;
@@ -26,5 +27,6 @@ public class Passenger implements Serializable {
 	 this._pickupLoc=pickupLoc;
 	 this._dropoffLoc=dropoffLoc;
 	 this._spots=spots;
+	 this._userId= userId;
  }
 }

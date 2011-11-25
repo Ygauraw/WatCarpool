@@ -16,9 +16,10 @@ public class Driver implements Serializable {
  public String _pickupLoc; 
  public String _dropoffLoc; 
  public int _spots;
+ public String _userId;
  
  private Driver() {}
- public Driver( String contact, Date date, String pickupLoc, String dropoffLoc, int spots)
+ public Driver( String contact, Date date, String pickupLoc, String dropoffLoc, int spots, String userId)
  {
 
 	 this._contact=contact;
@@ -26,5 +27,7 @@ public class Driver implements Serializable {
 	 this._pickupLoc=pickupLoc;
 	 this._dropoffLoc=dropoffLoc;
 	 this._spots=spots;
+	 this._userId=userId;
+	 
  }
 }

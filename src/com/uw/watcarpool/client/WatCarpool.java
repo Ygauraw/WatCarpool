@@ -89,11 +89,6 @@ public class WatCarpool implements EntryPoint {
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
-		//Cookie Management
-		Collection<String> cookies = Cookies.getCookieNames();
-	    for (String cookie : cookies) {
-	      Cookies.removeCookie(cookie);
-	    }
 		//Verify Login Status
 	    loginService.login(GWT.getHostPageBaseURL(), new AsyncCallback<LoginInfo>() {
 	      public void onFailure(Throwable error) {
@@ -112,6 +107,9 @@ public class WatCarpool implements EntryPoint {
 	        	signInLink.setVisible(false);
 	        	
 	        } else {
+	        	//Cookie Management
+	    		Cookies.removeCookie("_ah_SESSION");
+	    	    //loadGWTComponents();
 	        	renderLogin();
 	        	signInLink.setHref(loginInfo.getLoginUrl());
 	         	signInLink.setVisible(true);
