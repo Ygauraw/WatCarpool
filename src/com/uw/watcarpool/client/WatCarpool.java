@@ -1,6 +1,7 @@
 package com.uw.watcarpool.client;
 
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import com.uw.watcarpool.shared.ClientUtilities;
@@ -82,25 +83,48 @@ public class WatCarpool implements EntryPoint {
 	final Button passengerSubmitBtn = new Button("Go");
 	final VerticalPanel passengerDialogPanel = new VerticalPanel();
 	final HorizontalPanel passengerButtonPanel = new HorizontalPanel();
-	final Image loginIcon= new Image("/login.png");
+	final Image loginIcon= new Image("img/login.png");
 	
 	/**
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
-		
-	   loadGWTComponents();
+		//Cookie Management
+		Collection<String> cookies = Cookies.getCookieNames();
+	    for (String cookie : cookies) {
+	      Cookies.removeCookie(cookie);
+	    }
+		//Verify Login Status
+	    loginService.login(GWT.getHostPageBaseURL(), new AsyncCallback<LoginInfo>() {
+	      public void onFailure(Throwable error) {
+	    	  Window.alert("Request remote service failed...");
+	    	  error.printStackTrace();
+	      }
 
+	      public void onSuccess(LoginInfo result) {
+	        loginInfo = result;
+	        if(loginInfo.isLoggedIn()) {
+	        	loadGWTComponents();
+	        	loginLabel.setText("Welcome, "+result.getEmailAddress());
+	        	loginLabel.setVisible(true);
+	 		    signOutLink.setHref(loginInfo.getLogoutUrl());
+	        	signOutLink.setVisible(true);
+	        	signInLink.setVisible(false);
+	        	
+	        } else {
+	        	renderLogin();
+	        	signInLink.setHref(loginInfo.getLoginUrl());
+	         	signInLink.setVisible(true);
+	 		    signOutLink.setVisible(false);
+	        }
+	      }
+	    });
+		
+	 
 	}
 	
 	private void loadGWTComponents()
 	{
-		// Set cookie for this session
-		String path=GWT.getModuleBaseURL();
-		path=path.substring(0, path.length()-1);
-		int index=path.lastIndexOf('/');
-		path=path.substring(index);
-		Cookies.setCookie("JSESSIONID", "", new Date(0), null, path, false);
 		// Init Login Panel
 		loginPanel.addStyleName("loginPanel");
 		loginPanel.add(loginIcon);
@@ -222,35 +246,6 @@ public class WatCarpool implements EntryPoint {
 		passengerDialogPanel.add(passengerButtonPanel);
 		
 		
-		//Verify Login Status
-	    loginService.login(GWT.getHostPageBaseURL(), new AsyncCallback<LoginInfo>() {
-	      public void onFailure(Throwable error) {
-	    	  Window.alert("Request remote service failed...");
-	    	  error.printStackTrace();
-	      }
-
-	      public void onSuccess(LoginInfo result) {
-	        loginInfo = result;
-	        if(loginInfo.isLoggedIn()) {
-	        	
-	        	loginLabel.setText("Welcome, "+result.getEmailAddress());
-	        	loginLabel.setVisible(true);
-	 		    signOutLink.setHref(loginInfo.getLogoutUrl());
-	        	signOutLink.setVisible(true);
-	        	signInLink.setVisible(false);
-	  
-	        } else {
-	    		String path=GWT.getModuleBaseURL();
-	    		path=path.substring(0, path.length()-1);
-	    		int index=path.lastIndexOf('/');
-	    		path=path.substring(index);
-	    		Cookies.removeCookie("JSESSIONID", path);
-	        	signInLink.setHref(loginInfo.getLoginUrl());
-	         	signInLink.setVisible(true);
-	 		    signOutLink.setVisible(false);
-	        }
-	      }
-	    });
 		
 		/**
 		 * Handlers for different button
@@ -432,6 +427,21 @@ public class WatCarpool implements EntryPoint {
 		RootPanel.get("errorLabelContainer").add(errorLabel);
 		RootPanel.get("fetchedDriversContainer").add(dTable);
 	}
+	
+	private static native void renderLogin() /*-{
+	 $wnd.jQuery(function ($) {
+			$("#basic-modal-content").modal({onOpen: function (dialog) {
+	    	dialog.overlay.fadeIn('slow', function () {
+			dialog.data.hide();
+			dialog.container.fadeIn('slow', function () {
+			dialog.data.slideDown('slow');
+			});
+		});
+	}});
+	
+	
+	});
+}-*/;
 	 
 	  
 }
