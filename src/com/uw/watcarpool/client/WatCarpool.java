@@ -8,6 +8,7 @@ import com.uw.watcarpool.shared.ClientUtilities;
 import com.uw.watcarpool.shared.FieldVerifier;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -26,10 +27,14 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.TabLayoutPanel;
+import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.datepicker.client.DateBox;
 import com.google.gwt.view.client.ListDataProvider;
+import com.google.gwt.view.client.SelectionChangeEvent;
+import com.google.gwt.view.client.SingleSelectionModel;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -60,6 +65,7 @@ public class WatCarpool implements EntryPoint {
 	private Anchor signInLink = new Anchor(" Sign In ");
 	private Anchor signOutLink = new Anchor(" Sign Out ");
     
+	final TabPanel tabPanel = new TabPanel();
     final TextBox contactField = new TextBox();
 	final Label errorLabel = new Label();
 	final Button driverBtn = new Button("Offer a Carpool");	
@@ -123,6 +129,15 @@ public class WatCarpool implements EntryPoint {
 	
 	private void loadGWTComponents()
 	{
+		// Init Tab Panel
+		tabPanel.setAnimationEnabled(true);
+		tabPanel.setVisible(false);
+	    tabPanel.add(dTable, "Search Results");
+	    tabPanel.add(new HTML("2"),"Manage My Carpools");
+	    tabPanel.add(new HTML("3"), "Manage My Bookings");
+	    tabPanel.setWidth("900px");
+		tabPanel.selectTab(0);
+		
 		// Init Login Panel
 		loginPanel.addStyleName("loginPanel");
 		loginPanel.add(loginIcon);
@@ -140,6 +155,15 @@ public class WatCarpool implements EntryPoint {
 		
 		
 		// Init Results Table
+		
+		// UUID Column
+		TextColumn<Driver> dUUIDCol = new TextColumn<Driver>() {
+		      @Override
+		      public String getValue(Driver d) {
+		        return d._UUID+"";
+		      }
+		    };
+				    
 		// Contact Column
 		TextColumn<Driver> dContactCol = new TextColumn<Driver>() {
 		      @Override
@@ -181,19 +205,40 @@ public class WatCarpool implements EntryPoint {
 		    };
 		    
 		// Add those columns to the drivers' table
+		dTable.addColumn(dUUIDCol, "ID");
 		dTable.addColumn(dContactCol, "Contact Number");
 		dTable.addColumn(dDateTimeCol, "Carpool Date");
 		dTable.addColumn(dPickupCol, "Pickup Location");
 		dTable.addColumn(dDropoffCol, "Dropoff Location");
 		dTable.addColumn(dSpotsCol, "Available Spots");
 		dTable.setTitle("Available Carpools");
-		    
+		  
 		// Create a data provider.
 		driverDataProvider.addDataDisplay(dTable);
-
-        //Hide the drivers table when there is no data 
+        // Hide the drivers table when there is no data 
 		dTable.setVisible(false);
-        
+
+		// Add SelectionModel to dTable;
+		final SingleSelectionModel<Driver> ssm = new SingleSelectionModel<Driver>();
+		dTable.setSelectionModel(ssm);
+		ssm.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+		    @ Override
+		    public void onSelectionChange(final SelectionChangeEvent event)
+		    {
+		        final Driver d = ssm.getSelectedObject();
+		    	dataStoreService.updateDrivers(d._UUID.toString(),tripDate.getValue(), loginInfo.getEmailAddress(),
+						new AsyncCallback<String>() {
+							public void onFailure(Throwable caught) {
+								
+								caught.printStackTrace();
+							}
+
+							public void onSuccess(String uuid) {
+								Window.alert("The driver has been notified. Please keep your reference id: "+uuid);
+							}
+						});
+		    }
+		});
 		
 		// Init Driver Components
 		driverBtn.addStyleName("openInputButton");
@@ -242,6 +287,7 @@ public class WatCarpool implements EntryPoint {
 		passengerButtonPanel.add(passengerSubmitBtn);
 		passengerButtonPanel.add(passengerCloseBtn);
 		passengerDialogPanel.add(passengerButtonPanel);
+		
 		
 		
 		
@@ -368,9 +414,10 @@ public class WatCarpool implements EntryPoint {
 								}
 
 								public void onSuccess(List<Passenger> drivers) {
-									driverDialog.setText("Confirmed");
-									driverDialog.center();
-									driverSubmitBtn.setFocus(true);
+									
+									Window.Location.reload();
+									//TO DO 
+									
 								}
 							});
 				}		
@@ -383,7 +430,7 @@ public class WatCarpool implements EntryPoint {
 					errorLabel.setText("");
 					// Then, we send the input to the server.
 					passengerBtn.setEnabled(false);
-					
+	
 					dataStoreService.checkDrivers("seeking",contactField.getText(),contactField.getText(), tripDate.getValue(),"NA", 
 							destination.getText(),Integer.parseInt(numPassengers.getText()),
 							new AsyncCallback<List<Driver>>() {
@@ -401,7 +448,8 @@ public class WatCarpool implements EntryPoint {
 									{									
 									ClientUtilities.populateDrivers(driverDataProvider, drivers);
 									passengerBtn.setEnabled(true);
-									dTable.setVisible(true);
+								    dTable.setVisible(true);
+									tabPanel.setVisible(true);
 									}
 									else
 									{
@@ -415,7 +463,7 @@ public class WatCarpool implements EntryPoint {
 
 				}		
 		});
-		
+	    
 
 		// Add the GUI components to the RootPanel
 		RootPanel.get("loginPanel").add(loginPanel);
@@ -423,7 +471,7 @@ public class WatCarpool implements EntryPoint {
 		RootPanel.get("driverButtonContainer").add(driverBtn);
 		RootPanel.get("passengerButtonContainer").add(passengerBtn);
 		RootPanel.get("errorLabelContainer").add(errorLabel);
-		RootPanel.get("fetchedDriversContainer").add(dTable);
+		RootPanel.get("tabPanelContainer").add(tabPanel);
 	}
 	
 	private static native void renderLogin() /*-{
