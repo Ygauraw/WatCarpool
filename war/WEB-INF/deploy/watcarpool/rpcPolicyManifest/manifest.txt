@@ -1,4 +1,4 @@
 # Module watcarpool
 # RPC service class, partial path of RPC policy file
-com.uw.watcarpool.client.DataStoreService, AA5D9BE7144A5A5DB762E16E03BCA576.gwt.rpc
+com.uw.watcarpool.client.DataStoreService, 3927A21E5019BFFD0BB60F5C36250C12.gwt.rpc
 com.uw.watcarpool.client.LoginService, D4B6D5B455487DF6286C0716B56E41E0.gwt.rpc

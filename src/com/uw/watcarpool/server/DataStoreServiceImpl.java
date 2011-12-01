@@ -14,26 +14,29 @@ import com.google.appengine.api.users.UserServiceFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
+import com.uw.watcarpool.client.Booking;
 import com.uw.watcarpool.client.DataStoreService;
 import com.uw.watcarpool.client.Driver;
+import com.uw.watcarpool.client.Match;
 import com.uw.watcarpool.client.Passenger;
 import com.uw.watcarpool.shared.ClientUtilities;
 import com.uw.watcarpool.shared.UUID;
 
+
 @SuppressWarnings("serial")
 public class DataStoreServiceImpl extends RemoteServiceServlet implements
 		DataStoreService {
-	UserService userService = UserServiceFactory.getUserService();
-    User user = userService.getCurrentUser();
+
 	static{
+		ObjectifyService.register(Match.class);
 	    ObjectifyService.register(Passenger.class);
 	    ObjectifyService.register(Driver.class);
 		}
 	
-	@SuppressWarnings("unchecked")
-	public List<Driver> checkDrivers(String kind, String name, String contact, Date date, String pickupLoc, String dropoffLoc, int spots)
-			throws IllegalArgumentException {
-		
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public List<Driver> checkDrivers(String kind, String name, String contact, Date date, String pickupLoc, String dropoffLoc, int spots) throws IllegalArgumentException {
+		UserService userService = UserServiceFactory.getUserService();
+	    User user = userService.getCurrentUser();
         Objectify ofy = ObjectifyService.begin();
         List<Driver> ret = new ArrayList<Driver>();
 		
@@ -89,7 +92,8 @@ public class DataStoreServiceImpl extends RemoteServiceServlet implements
 
 	public List<Passenger> checkPassengers(String kind, String name, String contact, Date date, String pickupLoc, String dropoffLoc, int spots)
 		{
-
+		UserService userService = UserServiceFactory.getUserService();
+	    User user = userService.getCurrentUser();
 		Objectify ofy = ObjectifyService.begin();
         List<Passenger> ret = new ArrayList<Passenger>();
 		 
@@ -122,31 +126,57 @@ public class DataStoreServiceImpl extends RemoteServiceServlet implements
 	    }
 	}
 	
-    public String updateDrivers(String dUUID, Date date, String userId)
+    public String updateDrivers(String dUUID, Date date, String userId, String dropoffLoc)
     {
-    	Objectify dofy = ObjectifyService.begin();
+    	
+    	String ret=null;
+        Objectify dofy = ObjectifyService.begin();
     	Driver d = dofy.get(Driver.class, new Long(dUUID));  
     	
     	Objectify pofy = ObjectifyService.begin();
-    	Query<Passenger> q = pofy.query(Passenger.class).filter("_userId", userId);
+    	Query<Passenger> q = pofy.query(Passenger.class).filter("_userId", userId).filter("_dropoffLoc", dropoffLoc);
     	QueryResultIterator<Passenger> iterator = q.iterator();
 		while (iterator.hasNext()) {
 	        Passenger p = iterator.next();
 	        if (p._date.equals(date))
 	        {
-	          // Assign the matchId for both parties;
-	          String matchId=UUID.uuid(5);
-	          d._matchId=matchId;
-	          p._matchedId=matchId;
-	          d._pending=true;
-	          dofy.put(d);
-	          p._pending=true;
-	          pofy.put(p);
+	        	//Change statuses on matched parties
+	        	p._pending=true;
+	        	d._pending=true;
+	        	dofy.put(d);
+	        	pofy.put(p);
+	        	Objectify mfy = ObjectifyService.begin();
+	        	Match m = new Match(d._UUID, p._UUID);
+	        	assert m._UUID != null;
+	        	mfy.put(m);
+	        	ret=m._UUID.toString();
 	        }
 		}
-		return dofy.get(Driver.class,d._UUID)._matchId;
+		return ret;
 		
     }
+    public List<Booking> getBookings(String email)
+	{
+    	List<Booking> myBookings =new ArrayList<Booking>();
+     	Objectify mfy = ObjectifyService.begin();
+    	Objectify dofy = ObjectifyService.begin();
+    	Objectify pofy = ObjectifyService.begin();
+    	
+    	Query<Match> q = mfy.query(Match.class);
+    	QueryResultIterator<Match> iterator = q.iterator();
+    	
+    	while (iterator.hasNext()) {
+    		Match m = iterator.next();
+    		Driver d = dofy.get(Driver.class, m._driver);
+    		Passenger p = pofy.get(Passenger.class,m._passenger);
+    	    if (d._userId.equalsIgnoreCase(email) || p._userId.equalsIgnoreCase(email))
+    	    {
+    	    	myBookings.add(new Booking(d,p));
+    	    }
+    	}
+    	return myBookings;
+	
+	}
 	 
 	
 }

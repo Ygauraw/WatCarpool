@@ -5,11 +5,12 @@ import java.util.Date;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
+@SuppressWarnings("serial")
 public class Driver implements Serializable {
 
- private static final long serialVersionUID = -8579153469193697946L;
  @Id public Long _UUID;
  @Transient String doNotPersist;
+ public Date _timestamp;
  public String _contact;
  public Date _date;
  public String _pickupLoc; 
@@ -18,12 +19,12 @@ public class Driver implements Serializable {
  public String _userId;
  public boolean _pending;
  public boolean _matched;
- public String _matchId;
  
- private Driver() {}
+ @SuppressWarnings("unused")
+private Driver() {}
  public Driver( String contact, Date date, String pickupLoc, String dropoffLoc, int spots, String userId)
  {
-
+     this._timestamp=new Date();
 	 this._contact=contact;
 	 this._date=date;
 	 this._pickupLoc=pickupLoc;
@@ -32,7 +33,6 @@ public class Driver implements Serializable {
 	 this._userId=userId;
 	 this._pending=false;
 	 this._matched=false;
-	 this._matchId="";
 	 
  }
 }

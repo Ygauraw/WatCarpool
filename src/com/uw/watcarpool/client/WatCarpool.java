@@ -75,7 +75,9 @@ public class WatCarpool implements EntryPoint {
 	final TextBox dropoffLoc = new TextBox();
 	final TextBox availSpots = new TextBox();
 	final CellTable<Driver> dTable = new CellTable<Driver>();
+	final CellTable<Booking> bTable = new CellTable<Booking>();
 	final ListDataProvider<Driver> driverDataProvider = new ListDataProvider<Driver>();
+	final ListDataProvider<Booking> bookingDataProvider = new ListDataProvider<Booking>();
 	final Button passengerBtn = new Button("Find a Carpool");
 	final Button passengerCloseBtn = new Button("Close");
 	final DateBox tripDate = new DateBox();
@@ -131,11 +133,11 @@ public class WatCarpool implements EntryPoint {
 	{
 		// Init Tab Panel
 		tabPanel.setAnimationEnabled(true);
-		tabPanel.setVisible(false);
+		tabPanel.setVisible(true);
 	    tabPanel.add(dTable, "Search Results");
 	    tabPanel.add(new HTML("2"),"Manage My Carpools");
-	    tabPanel.add(new HTML("3"), "Manage My Bookings");
-	    tabPanel.setWidth("900px");
+	    tabPanel.add(bTable, "Manage My Bookings");
+	    tabPanel.setWidth("1000px");
 		tabPanel.selectTab(0);
 		
 		// Init Login Panel
@@ -154,7 +156,9 @@ public class WatCarpool implements EntryPoint {
 		contactField.selectAll();
 		
 		
-		// Init Results Table
+		/*
+		 *  Init Drivers Table
+		 */
 		
 		// UUID Column
 		TextColumn<Driver> dUUIDCol = new TextColumn<Driver>() {
@@ -164,13 +168,6 @@ public class WatCarpool implements EntryPoint {
 		      }
 		    };
 				    
-		// Contact Column
-		TextColumn<Driver> dContactCol = new TextColumn<Driver>() {
-		      @Override
-		      public String getValue(Driver d) {
-		        return d._contact;
-		      }
-		    };
     
 		// Date/Time Column
 		TextColumn<Driver> dDateTimeCol = new TextColumn<Driver>() {
@@ -206,7 +203,6 @@ public class WatCarpool implements EntryPoint {
 		    
 		// Add those columns to the drivers' table
 		dTable.addColumn(dUUIDCol, "ID");
-		dTable.addColumn(dContactCol, "Contact Number");
 		dTable.addColumn(dDateTimeCol, "Carpool Date");
 		dTable.addColumn(dPickupCol, "Pickup Location");
 		dTable.addColumn(dDropoffCol, "Dropoff Location");
@@ -226,7 +222,7 @@ public class WatCarpool implements EntryPoint {
 		    public void onSelectionChange(final SelectionChangeEvent event)
 		    {
 		        final Driver d = ssm.getSelectedObject();
-		    	dataStoreService.updateDrivers(d._UUID.toString(),tripDate.getValue(), loginInfo.getEmailAddress(),
+		    	dataStoreService.updateDrivers(d._UUID.toString(),tripDate.getValue(), loginInfo.getEmailAddress(),destination.getText().trim(),
 						new AsyncCallback<String>() {
 							public void onFailure(Throwable caught) {
 								
@@ -237,9 +233,93 @@ public class WatCarpool implements EntryPoint {
 								Window.alert("The driver has been notified. Please keep your reference id: "+uuid);
 							}
 						});
+		    	dataStoreService.getBookings(loginInfo.getEmailAddress(), new AsyncCallback<List<Booking>>() {
+							public void onFailure(Throwable caught) {
+								
+								caught.printStackTrace();
+							}
+
+							public void onSuccess(List<Booking> myBookings) {
+								ClientUtilities.populateBookings(bookingDataProvider, myBookings);	
+							}
+						});
 		    }
 		});
 		
+		
+		/*
+		 * Init My Bookings Table
+		 */	    
+		TextColumn<Booking> carpoolDateCol = new TextColumn<Booking>() {
+		      @Override
+		      public String getValue(Booking b) {
+		        return b._driver._date.toString();
+		      }
+		    };
+  
+		TextColumn<Booking> driverContactCol = new TextColumn<Booking>() {
+		      @Override
+		      public String getValue(Booking b) {
+		        return b._driver._contact;
+		      }
+		    };
+			    
+		TextColumn<Booking> passengerContactCol = new TextColumn<Booking>() {
+		      @Override
+		      public String getValue(Booking b) {
+		        return b._passenger._contact;
+		      }
+		    };
+		 
+	    TextColumn<Booking> pickupCol = new TextColumn<Booking>() {
+		      @Override
+		      public String getValue(Booking b) {
+		        return b._driver._pickupLoc;
+		      }
+		    };
+	    TextColumn<Booking> dropoffCol = new TextColumn<Booking>() {
+		      @Override
+		      public String getValue(Booking b) {
+		        return b._driver._dropoffLoc;
+		      }
+		    };
+	    TextColumn<Booking> numSeatsCol = new TextColumn<Booking>() {
+		      @Override
+		      public String getValue(Booking b) {
+		        return b._driver._spots+"";
+		      }
+		    };
+	    TextColumn<Booking> numPassengersCol = new TextColumn<Booking>() {
+		      @Override
+		      public String getValue(Booking b) {
+		        return b._passenger._spots+"";
+		      }
+		    };
+		    
+		// Add those columns to the drivers' table
+		bTable.addColumn(carpoolDateCol, "Carppol Date");
+		bTable.addColumn(driverContactCol, "Driver's Contact #");
+		bTable.addColumn(passengerContactCol, "Passenger's Contact #");
+		bTable.addColumn(pickupCol, "Pickup Location");
+		bTable.addColumn(dropoffCol, "Dropoff Location");
+		bTable.addColumn(numSeatsCol, "Available Spots");
+		bTable.addColumn(numPassengersCol, "# of Passenger");
+		bTable.setTitle("My Bookings");
+		bTable.setVisible(true);
+		// Create a data provider.
+		bookingDataProvider.addDataDisplay(bTable);
+		
+		// Get Bookings for the current logged in user
+    	dataStoreService.getBookings(loginInfo.getEmailAddress(), new AsyncCallback<List<Booking>>() {
+					public void onFailure(Throwable caught) {
+						caught.printStackTrace();
+					}
+
+					public void onSuccess(List<Booking> myBookings) {
+						ClientUtilities.populateBookings(bookingDataProvider, myBookings);	
+						tabPanel.selectTab(2);
+					}
+				});
 		// Init Driver Components
 		driverBtn.addStyleName("openInputButton");
 		driverDialog.setText("Basic Carpool Info");
@@ -407,7 +487,7 @@ public class WatCarpool implements EntryPoint {
 							new AsyncCallback<List<Passenger>>() {
 								public void onFailure(Throwable caught) {
 									// Show the RPC error message to the user
-									driverDialog.setText("Request failed...");
+									driverDialog.setText("Check Passengers Request failed...");
 									driverDialog.center();
 									driverSubmitBtn.setFocus(true);
 									caught.printStackTrace();
@@ -436,7 +516,7 @@ public class WatCarpool implements EntryPoint {
 							new AsyncCallback<List<Driver>>() {
 								public void onFailure(Throwable caught) {
 									// Show the RPC error message to the user
-									passengerDialog.setText("Request failed...");					
+									passengerDialog.setText("Check Drivers Request failed...");					
 									passengerDialog.center();
 									passengerSubmitBtn.setFocus(true);
 									caught.printStackTrace();
@@ -449,7 +529,7 @@ public class WatCarpool implements EntryPoint {
 									ClientUtilities.populateDrivers(driverDataProvider, drivers);
 									passengerBtn.setEnabled(true);
 								    dTable.setVisible(true);
-									tabPanel.setVisible(true);
+									tabPanel.selectTab(0);
 									}
 									else
 									{
@@ -463,7 +543,7 @@ public class WatCarpool implements EntryPoint {
 
 				}		
 		});
-	    
+
 
 		// Add the GUI components to the RootPanel
 		RootPanel.get("loginPanel").add(loginPanel);

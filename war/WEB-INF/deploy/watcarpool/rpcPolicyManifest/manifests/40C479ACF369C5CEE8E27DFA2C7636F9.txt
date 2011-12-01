@@ -1,2 +1,0 @@
-serviceClass: com.uw.watcarpool.client.DataStoreService
-path: AA5D9BE7144A5A5DB762E16E03BCA576.gwt.rpc

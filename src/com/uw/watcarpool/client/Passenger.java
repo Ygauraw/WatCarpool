@@ -6,11 +6,13 @@ import java.util.Date;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
+@SuppressWarnings("serial")
 public class Passenger implements Serializable {
 
- private static final long serialVersionUID = -3985879017430394322L;
+
  @Id public Long _UUID;
  @Transient String doNotPersist;
+ public Date _timestamp;
  public String _contact;
  public Date _date;
  public String _pickupLoc; 
@@ -19,12 +21,12 @@ public class Passenger implements Serializable {
  public String _userId;
  public boolean _pending;
  public boolean _matched;
- public String _matchedId;
  
- private Passenger(){};
+ @SuppressWarnings("unused")
+private Passenger(){};
  public Passenger (String contact, Date date, String pickupLoc, String dropoffLoc, int spots,  String userId)
  {
-
+     this._timestamp=new Date();
 	 this._contact=contact;
 	 this._date=date;
 	 this._pickupLoc=pickupLoc;
@@ -33,6 +35,5 @@ public class Passenger implements Serializable {
 	 this._userId= userId;
 	 this._pending=false;
 	 this._matched=false;
-     this._matchedId="";
  }
 }

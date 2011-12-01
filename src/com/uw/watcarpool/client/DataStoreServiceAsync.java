@@ -12,6 +12,8 @@ public interface DataStoreServiceAsync {
 	void checkDrivers(String kind, String name, String contact, Date date, String pickupLoc, String dropoffLoc, int spots, AsyncCallback<List<Driver>> callback)
 			throws IllegalArgumentException;
 	
-	void updateDrivers(String dUUID, Date date, String userId, AsyncCallback<String> callback)
+	void updateDrivers(String dUUID, Date date, String userId, String dropoffLoc, AsyncCallback<String> callback)
+			throws IllegalArgumentException;
+	void getBookings(String email, AsyncCallback<List<Booking>> callback)
 			throws IllegalArgumentException;
 }
