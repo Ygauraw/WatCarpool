@@ -1,0 +1,2 @@
+serviceClass: com.uw.watcarpool.client.SuggestionService
+path: D08BE5FED6B877923FE1E61E90FDE533.gwt.rpc

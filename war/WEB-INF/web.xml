@@ -26,6 +26,17 @@
         <servlet-name>loginService</servlet-name>
         <url-pattern>/watcarpool/login</url-pattern>
     </servlet-mapping>
+    
+  <servlet>
+    <servlet-name>suggestionServlet</servlet-name>
+    <servlet-class>com.uw.watcarpool.server.SuggestionServiceImpl</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>suggestionServlet</servlet-name>
+    <url-pattern>/watcarpool/suggestion</url-pattern>
+  </servlet-mapping>
+  
   
   <!-- Default page to serve -->
   <welcome-file-list>
