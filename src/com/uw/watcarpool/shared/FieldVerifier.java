@@ -1,6 +1,5 @@
 package com.uw.watcarpool.shared;
 
-import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
 

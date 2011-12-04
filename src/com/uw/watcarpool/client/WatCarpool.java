@@ -1,27 +1,22 @@
 package com.uw.watcarpool.client;
 
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Date;
+
 import java.util.List;
 
-import com.smartgwt.client.util.BooleanCallback;
-import com.smartgwt.client.util.SC;
+import com.uw.watcarpool.client.composite.MyButtonPanel;
+import com.uw.watcarpool.client.composite.MyLoginPanel;
+import com.uw.watcarpool.client.composite.MyTabPanel;
 import com.uw.watcarpool.shared.ClientUtilities;
 import com.uw.watcarpool.shared.FieldVerifier;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.user.cellview.client.CellTable;
-import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
-import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -35,14 +30,10 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.MultiWordSuggestOracle;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SuggestBox;
-import com.google.gwt.user.client.ui.TabLayoutPanel;
-import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.datepicker.client.DateBox;
 import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.view.client.SelectionChangeEvent;
-import com.google.gwt.view.client.SingleSelectionModel;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -56,51 +47,32 @@ public class WatCarpool implements EntryPoint {
 			+ "attempting to contact the server. Please check your network "
 			+ "connection and try again.";
 
-	/**
-	 * Create remote service proxy to talk to the server-side Greeting service.
-	 */
+	// Initialize RPC Services
 	private final DataStoreServiceAsync dataStoreService = GWT.create(DataStoreService.class);  //GAE DataStore
 	private final LoginServiceAsync loginService = GWT.create(LoginService.class); //GAE UserService
 	private final SuggestionServiceAsync suggestionService = GWT.create(SuggestionService.class); //Suggestion Service
 	
-
-	/**
-	 * GUI Components
-	 */
-   // Declare Login components
+   // Declare sharable GUI components
 	private LoginInfo loginInfo = null;
-	private HorizontalPanel loginPanel = new HorizontalPanel();
-	private Label loginLabel = new Label("");
-	private Anchor signInLink = new Anchor(" Sign In ");
-	private Anchor signOutLink = new Anchor(" Sign Out ");
-    
-	final TabPanel tabPanel = new TabPanel();
+	final Label loginLabel = new Label("");
+	final Anchor signInLink = new Anchor(" Sign In ");
+	final Anchor signOutLink = new Anchor(" Sign Out ");
 	boolean noSuggestions =false;
-	final Label errorLabel = new Label();
 	final Button driverBtn = new Button("Offer a Carpool");	
-	final Button driverCloseBtn = new Button("Close");
-	final DateBox carpoolDate = new DateBox();
-	final TextBox pickupLoc = new TextBox();
-	final TextBox dropoffLoc = new TextBox();
-	final TextBox availSpots = new TextBox();
-	final CellTable<Driver> dTable = new CellTable<Driver>();
-	final CellTable<Booking> bTable = new CellTable<Booking>();
-	final ListDataProvider<Driver> driverDataProvider = new ListDataProvider<Driver>();
-	final ListDataProvider<Booking> bookingDataProvider = new ListDataProvider<Booking>();
 	final Button passengerBtn = new Button("Find a Carpool");
-	final Button passengerCloseBtn = new Button("Close");
+	final DateBox carpoolDate = new DateBox();
 	final DateBox tripDate = new DateBox();
+	final TextBox dropoffLoc = new TextBox();
 	final TextBox destination = new TextBox();
-	final TextBox numPassengers = new TextBox();
-	final DialogBox driverDialog = new DialogBox();
-	final Button driverSubmitBtn = new Button("Go");
-	final VerticalPanel driverDialogPanel = new VerticalPanel();
-	final HorizontalPanel driverButtonPanel = new HorizontalPanel();
-	final DialogBox passengerDialog = new DialogBox();
-	final Button passengerSubmitBtn = new Button("Go");
-	final VerticalPanel passengerDialogPanel = new VerticalPanel();
-	final HorizontalPanel passengerButtonPanel = new HorizontalPanel();
-	final Image loginIcon= new Image("img/login.png");
+	final Button refreshBtn = new Button("Refresh");
+	final ListDataProvider<Driver> driverDataProvider = new ListDataProvider<Driver>();
+	final ListDataProvider<Passenger> passengerDataProvider = new ListDataProvider<Passenger>();
+	final ListDataProvider<Booking> bookingDataProvider = new ListDataProvider<Booking>();
+
+	// Initialize Composite GUI Components
+	MyTabPanel tabPanel;
+	MyButtonPanel buttonsPanel;
+	MyLoginPanel loginPanel;
 	
 	/**
 	 * This is the entry point method.
@@ -139,533 +111,46 @@ public class WatCarpool implements EntryPoint {
 	 
 	}
 	
-	@SuppressWarnings("deprecation")
 	private void loadGWTComponents()
 	{
-		
-    	/*
-    	 * Load Suggestion Oracles
-    	 */
-	   final MultiWordSuggestOracle oracle = new MultiWordSuggestOracle();
-       suggestionService.getSuggestions(loginInfo.getEmailAddress(),new AsyncCallback<List<String>>() {
-  	      public void onFailure(Throwable error) {
-  	    	  Window.alert("Request remote service failed...");
-  	    	  error.printStackTrace();
-  	      }
-
-  	      public void onSuccess(List<String> suggestions) {
-
-  	        if(suggestions.size()!=0) {
-  	         
-  	        String []phones = new String[suggestions.size()];
-  	        suggestions.toArray(phones);
-  	          for (int i = 0; i < phones.length; ++i) {
-  	            oracle.add(phones[i]);
-  	          }
-           
-   	        
-  	        } else {
-               noSuggestions=true;   	
-  	        }
-  	      }
-    	});
-       final SuggestBox contactField = new SuggestBox(oracle);
-		// Init misc GUI components
-		carpoolDate.setFormat(new DateBox.DefaultFormat(DateTimeFormat.getMediumDateTimeFormat()));
-		// Init Tab Panel
-		tabPanel.setAnimationEnabled(true);
-		tabPanel.setVisible(true);
-	    tabPanel.add(dTable, "Search Results");
-	    tabPanel.add(new HTML("2"),"Manage My Carpools");
-	    tabPanel.add(bTable, "Manage My Bookings");
-	    tabPanel.setWidth("1000px");
-		tabPanel.selectTab(0);
-		
-		// Init Login Panel
-		loginPanel.addStyleName("loginPanel");
-		loginPanel.add(loginIcon);
-		loginPanel.add(loginLabel);
-	    loginPanel.add(signInLink);
-	    loginPanel.add(signOutLink);
-	    loginLabel.setVisible(false);
-	    loginLabel.setVisible(false);
-	    
-		
-		// Init Contact TextBox
+	   // Initialize Login Panel
+	   loginPanel = new MyLoginPanel(loginLabel,signInLink,signOutLink);
+	   // Create and initialize the SuggestionBox
+       final SuggestBox contactField = new SuggestBox(initSuggestions());
+	
+		// Initialize Contact TextBox
 	    contactField.setTitle("e.g. 5191234567");
 		contactField.setFocus(true);
 		
-		
-		
-		/*
-		 *  Init Drivers Table
-		 */
-		
-		// UUID Column
-		TextColumn<Driver> dUUIDCol = new TextColumn<Driver>() {
-		      @Override
-		      public String getValue(Driver d) {
-		        return d._UUID+"";
-		      }
-		    };
-				    
-    
-		// Date/Time Column
-		TextColumn<Driver> dDateTimeCol = new TextColumn<Driver>() {
-			      @Override
-			      public String getValue(Driver d) {
-			        return d._date.toString();
-			      }
-			    };
-			    
-	    // Pickup Location Column
-	    TextColumn<Driver> dPickupCol = new TextColumn<Driver>() {
-	    	@Override
-	    	public String getValue(Driver d) {
-	    		return d._pickupLoc.toString();
-	    	}
-	    };
-	    
-	    // Dropoff Location Column
-		TextColumn<Driver> dDropoffCol = new TextColumn<Driver>() {
-		      @Override
-		      public String getValue(Driver d) {
-		        return d._dropoffLoc.toString();
-		      }
-		    };
-		    
-	    // Spots Location Column
-		TextColumn<Driver> dSpotsCol = new TextColumn<Driver>() {
-		      @Override
-		      public String getValue(Driver d) {
-		        return d._spots+"";
-		      }
-		    };
-		    
-		// Add those columns to the drivers' table
-		dTable.addColumn(dUUIDCol, "ID");
-		dTable.addColumn(dDateTimeCol, "Carpool Date");
-		dTable.addColumn(dPickupCol, "Pickup Location");
-		dTable.addColumn(dDropoffCol, "Dropoff Location");
-		dTable.addColumn(dSpotsCol, "Available Spots");
-		dTable.setTitle("Available Carpools");
-		  
-		// Create a data provider.
-		driverDataProvider.addDataDisplay(dTable);
-        // Hide the drivers table when there is no data 
-		dTable.setVisible(false);
-		// Add SelectionModel to dTable;
-		final SingleSelectionModel<Driver> ssm = new SingleSelectionModel<Driver>();
-		dTable.setSelectionModel(ssm);
-		ssm.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
-		    @ Override
-		    public void onSelectionChange(final SelectionChangeEvent event)
-		    {
-		    	
-		        SC.confirm("Do you want to contact the driver?", new BooleanCallback() {
-		            public void execute(Boolean value) {
-		              if (value != null && value) {
-		            	final Driver d = ssm.getSelectedObject();
-		  		    	dataStoreService.updateDrivers(d._UUID.toString(),tripDate.getValue(), loginInfo.getEmailAddress(),destination.getText().trim(),
-		  						new AsyncCallback<String>() {
-		  							public void onFailure(Throwable caught) {
-		  								
-		  								caught.printStackTrace();
-		  							}
-
-		  							public void onSuccess(String uuid) {
-		  								Window.alert("The driver has been notified. Please keep your reference id: "+uuid);
-		  							}
-		  						});
-		  		    	dataStoreService.getBookings(loginInfo.getEmailAddress(), new AsyncCallback<List<Booking>>() {
-		  							public void onFailure(Throwable caught) {
-		  								
-		  								caught.printStackTrace();
-		  							}
-
-		  							public void onSuccess(List<Booking> myBookings) {
-		  								ClientUtilities.populateBookings(bookingDataProvider, myBookings);	
-		  							}
-		  						});
-		              } else {
-		            	  //clear selection
-		            	  //ssm.setSelected(ssm.getSelectedObject(), false);
-		            	
-		              }
-		            }
-		          });
-		    	
-		    }
-		});
-		
-		
-		/*
-		 * Init My Bookings Table
-		 */	    
-		TextColumn<Booking> carpoolDateCol = new TextColumn<Booking>() {
-		      @Override
-		      public String getValue(Booking b) {
-		        return b._driver._date.toString();
-		      }
-		    };
-        carpoolDateCol.setSortable(true);
-
-		TextColumn<Booking> driverContactCol = new TextColumn<Booking>() {
-		      @Override
-		      public String getValue(Booking b) {
-		        return b._driver._contact;
-		      }
-		    };
-		driverContactCol.setSortable(true);
-		
-		TextColumn<Booking> driverEmailCol = new TextColumn<Booking>() {
-		      @Override
-		      public String getValue(Booking b) {
-		        return b._driver._userId;
-		      }
-		    };
-		driverEmailCol.setSortable(true);
-    
-		TextColumn<Booking> passengerContactCol = new TextColumn<Booking>() {
-		      @Override
-		      public String getValue(Booking b) {
-		        return b._passenger._contact;
-		      }
-		    };
-		passengerContactCol.setSortable(true);
-		
-		TextColumn<Booking> passengerEmailCol = new TextColumn<Booking>() {
-		      @Override
-		      public String getValue(Booking b) {
-		        return b._passenger._userId;
-		      }
-		    };
-		passengerEmailCol.setSortable(true);
-
-	    TextColumn<Booking> pickupCol = new TextColumn<Booking>() {
-		      @Override
-		      public String getValue(Booking b) {
-		        return b._driver._pickupLoc;
-		      }
-		    };
-	    TextColumn<Booking> dropoffCol = new TextColumn<Booking>() {
-		      @Override
-		      public String getValue(Booking b) {
-		        return b._driver._dropoffLoc;
-		      }
-		    };
-		dropoffCol.setSortable(true);
-
-	    TextColumn<Booking> numSeatsCol = new TextColumn<Booking>() {
-		      @Override
-		      public String getValue(Booking b) {
-		        return b._driver._spots+"";
-		      }
-		    };
-		numSeatsCol.setSortable(true);
-
-	    TextColumn<Booking> numPassengersCol = new TextColumn<Booking>() {
-		      @Override
-		      public String getValue(Booking b) {
-		        return b._passenger._spots+"";
-		      }
-		    };
-		numPassengersCol.setSortable(true);
- 
-		// Add sorting for the Carpool Date column
-	   ListHandler<Booking> carpoolDateSortHandler = new ListHandler<Booking>(bookingDataProvider.getList());
-	   carpoolDateSortHandler.setComparator(carpoolDateCol, new Comparator<Booking>() {
-		     public int compare(Booking b1, Booking b2) {
-		    	 if(b1._driver._date.after(b2._driver._date))
-	    	            return 1;
-	    	        else if(b1._driver._date.before(b2._driver._date))
-	    	            return -1;
-	    	        else
-	    	            return 0; 
-		     }
-		   });
-		bTable.addColumnSortHandler(carpoolDateSortHandler);
-		
-		// Add sorting for the Driver'Contact column
-	   ListHandler<Booking> driverContactSortHandler = new ListHandler<Booking>(bookingDataProvider.getList());
-	   driverContactSortHandler.setComparator(driverContactCol, new Comparator<Booking>() {
-		     public int compare(Booking b1, Booking b2) {
-		    	 return b1._driver._contact.compareTo(b2._driver._contact);
-		     }
-		   });
-		bTable.addColumnSortHandler(driverContactSortHandler);
-		// Add those columns to the drivers' table
-		bTable.addColumn(carpoolDateCol, "Carppol Date");
-		bTable.addColumn(driverContactCol, "Driver's Contact #");
-		bTable.addColumn(driverEmailCol, "Driver's Email");
-		bTable.addColumn(passengerContactCol, "Passenger's Contact #");
-		bTable.addColumn(passengerEmailCol, "Passenger's Email");
-		bTable.addColumn(pickupCol, "Pickup Location");
-		bTable.addColumn(dropoffCol, "Dropoff Location");
-		bTable.addColumn(numSeatsCol, "Available Spots");
-		bTable.addColumn(numPassengersCol, "# of Passenger");
-		bTable.setTitle("My Bookings");
-		bTable.setVisible(true);
-		// Create a data provider.
-		bookingDataProvider.addDataDisplay(bTable);
-		
-		// Get Bookings for the current logged in user
-    	dataStoreService.getBookings(loginInfo.getEmailAddress(), new AsyncCallback<List<Booking>>() {
-					public void onFailure(Throwable caught) {
-						caught.printStackTrace();
-					}
-
-					public void onSuccess(List<Booking> myBookings) {
-						ClientUtilities.populateBookings(bookingDataProvider, myBookings);	
-						tabPanel.selectTab(2);
-					}
-				});
-		// Init Driver Components
-		driverBtn.addStyleName("openInputButton");
-		driverDialog.setText("Basic Carpool Info");
-		driverDialog.setAnimationEnabled(true);	
-        driverSubmitBtn.getElement().setId("driverSubmitBtn");       
-        driverDialogPanel.addStyleName("driverDialogPanel");
-        driverDialogPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);
-		driverDialog.setWidget(driverDialogPanel);
-
-        // Init Driver Input Panel
-		driverDialogPanel.add(new HTML("<b>Date/Time:</b><br>"));
-		driverDialogPanel.add(carpoolDate);
-	    driverDialogPanel.add(new HTML("<br><b>Pickup Location:</b><br>"));
-	    driverDialogPanel.add(pickupLoc);	
-	    driverDialogPanel.add(new HTML("<br><b>Drop-off Location:</b><br>"));
-	    driverDialogPanel.add(dropoffLoc);
-		driverDialogPanel.add(new HTML("<br><b>Available Spots:</b><br>"));
-		driverDialogPanel.add(availSpots);
-		
-		// Add components to their corresponding panels
-		driverButtonPanel.add(driverSubmitBtn);
-		driverButtonPanel.add(driverCloseBtn);
-		driverDialogPanel.add(driverButtonPanel);
-		
-		
-		// Init Passenger Components
-	    passengerBtn.addStyleName("openInputButton");
-		passengerDialog.setAnimationEnabled(true);	
-		passengerSubmitBtn.getElement().setId("passengerSubmitBtn");
-		passengerDialogPanel.addStyleName("passengerDialogPanel");
-		passengerDialog.setWidget(passengerDialogPanel);
-		passengerDialogPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);
-		
-		
-		// Init Passenger Input Panel
-		passengerDialogPanel.add(new HTML("<b>Date/Time:</b><br>"));	
-		passengerDialogPanel.add(tripDate);		
-		passengerDialogPanel.add(new HTML("<br><b>Drop-off Location:</b><br>"));
-		passengerDialogPanel.add(destination);
-		passengerDialogPanel.add(new HTML("<br><b># of Passengers:</b><br>"));
-		passengerDialogPanel.add(numPassengers);
+		// Initialize the tabPanel
+		tabPanel = new  MyTabPanel(dataStoreService,driverDataProvider,passengerDataProvider,
+				bookingDataProvider,loginInfo, tripDate, carpoolDate, destination,dropoffLoc);
 				
-		
-		// Add components to their corresponding panels
-		passengerButtonPanel.add(passengerSubmitBtn);
-		passengerButtonPanel.add(passengerCloseBtn);
-		passengerDialogPanel.add(passengerButtonPanel);
-		
-		
-		
-		
-		/**
-		 * Handlers for different button
-		 */
-	    // Add a handler to driver's button
-		class DriverDialogHanlder implements ClickHandler, KeyUpHandler {
-			/**
-			 * Fired when the user clicks on the driverBtn.
-			 */
-			public void onClick(ClickEvent event) {
-				//hide previous open tables
-				dTable.setVisible(false);
-				
-				//validate contact number
-				String contact = contactField.getText();
-				if (FieldVerifier.isValidContact(contact)) {
-					errorLabel.setText(""); //remove the previous error message if any;
-					driverDialog.setText("Tell us a little bit more...");
-					driverDialog.center();	
-				}
-				else
-				{
-					errorLabel.setText("Oops, please enter your 10 digits contact # (e.g. 5191234567)");
-					return;
-				}
-
-			}
-	
-			/**
-			 * Fired when the user types in the contactField.
-			 */
-			public void onKeyUp(KeyUpEvent event) {
-				if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
+		// Initialize the buttonsPanel
+		buttonsPanel = new  MyButtonPanel(dataStoreService, tabPanel, contactField, 
+		suggestionService, loginInfo,driverDataProvider, passengerDataProvider, driverBtn, passengerBtn,
+		tripDate,carpoolDate, destination,dropoffLoc);
 					
-				}
-			}
-		}
-
-		// Associate the handler with the button
-		DriverDialogHanlder driverHandler = new DriverDialogHanlder();
-		driverBtn.addClickHandler(driverHandler);
-
-	    
-	   // Add a handler to passenger's button
-		class PassengerDialogHanlder implements ClickHandler, KeyUpHandler {
-			/**
-			 * Fired when the user clicks on the passengerBtn.
-			 */
-			public void onClick(ClickEvent event) {
-				
-				//hide previous open tables
-				dTable.setVisible(false);
-				
-				//validate contact number
-				String contact = contactField.getText();
-				if (FieldVerifier.isValidContact(contact)) {
-					errorLabel.setText(""); //remove the previous error message if any;
-					passengerDialog.setText("Tell us a little bit more...");
-					passengerDialog.center();			
-				}
-				else
-				{
-					errorLabel.setText("Oops, please enter your 10 digits contact # (e.g. 5191234567)");
-					return;
-				}		
-			}
-
-			/**
-			 * Fired when the user types in the contactField.
-			 */
-			public void onKeyUp(KeyUpEvent event) {
-				if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
-					
-				}
-			}
-		}
-
-		// Associate the handler with the button
-		PassengerDialogHanlder passengerHandler = new PassengerDialogHanlder();
-		passengerBtn.addClickHandler(passengerHandler);
-
 		
-		// Add a handler to driver's dialog close button
-		driverCloseBtn.addClickHandler(new ClickHandler() {
+		// Add Refresh Button Handler
+		refreshBtn.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				driverDialog.hide();
-				driverBtn.setEnabled(true);
-				driverBtn.setFocus(true);
+				Window.Location.reload();
 			}
 		});
+
 		
-		// Add a handler to passenger's dialog close button
-		passengerCloseBtn.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				passengerDialog.hide();
-				passengerBtn.setEnabled(true);
-				passengerBtn.setFocus(true);
-			}
-		});
-		
-		
-
-	    
-		// Add a handler to driver's submit button
-		driverSubmitBtn.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-					// First, we validate the input.
-					errorLabel.setText("");
-					
-					// Then, we send the input to the server.
-					driverBtn.setEnabled(false);
-					
-					dataStoreService.checkPassengers("offering",contactField.getText(),contactField.getText(), carpoolDate.getValue(),pickupLoc.getText(), 
-							dropoffLoc.getText(),Integer.parseInt(availSpots.getText()),
-							new AsyncCallback<List<Passenger>>() {
-								public void onFailure(Throwable caught) {
-									// Show the RPC error message to the user
-									driverDialog.setText("Check Passengers Request failed...");
-									driverDialog.center();
-									driverSubmitBtn.setFocus(true);
-									caught.printStackTrace();
-								}
-
-								public void onSuccess(List<Passenger> drivers) {
-									
-									Window.Location.reload();
-									//TO DO 
-									
-								}
-							});
-				}		
-		});
-		
-		// Add a handler to passenger's submit button
-		passengerSubmitBtn.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-			
-				    //Register Passenger's contact number for suggestions next time (if not already exist in the database)
-	        	 suggestionService.registerContactInfo(contactField.getText(), loginInfo.getEmailAddress(), new AsyncCallback<String>() {
-	  	       	      public void onFailure(Throwable error) {
-	  	       	    	  Window.alert("Request remote service failed...");
-	  	       	    	  error.printStackTrace();
-	  	       	      }
-
-	  	       	      public void onSuccess(String result) {
-	                  //Attach the new number to the user's email
-	  	       	      }
-	  	         	});
-					// First, we validate the input.
-					errorLabel.setText("");
-					// Then, we send the input to the server.
-					passengerBtn.setEnabled(false);
-	
-					dataStoreService.checkDrivers("seeking",contactField.getText(),contactField.getText(), tripDate.getValue(),"NA", 
-							destination.getText(),Integer.parseInt(numPassengers.getText()),
-							new AsyncCallback<List<Driver>>() {
-								public void onFailure(Throwable caught) {
-									// Show the RPC error message to the user
-									passengerDialog.setText("Check Drivers Request failed...");					
-									passengerDialog.center();
-									passengerSubmitBtn.setFocus(true);
-									caught.printStackTrace();
-								}
-
-								public void onSuccess(List<Driver> drivers) {
-									passengerDialog.hide();	
-									if(drivers!=null)
-									{									
-									ClientUtilities.populateDrivers(driverDataProvider, drivers);
-									passengerBtn.setEnabled(true);
-								    dTable.setVisible(true);
-									tabPanel.selectTab(0);
-									}
-									else
-									{
-										dTable.setVisible(false);
-										Window.alert("No matched carpools at this time, we'll notify you once matched carpool(s) entered in to your system");
-									    passengerBtn.setEnabled(true);
-									    Window.Location.reload();
-									}
-								}
-							});
-
-				}		
-		});
-
 
 		// Add the GUI components to the RootPanel
 		RootPanel.get("loginPanel").add(loginPanel);
 		RootPanel.get("contactFieldContainer").add(contactField);
-		RootPanel.get("driverButtonContainer").add(driverBtn);
-		RootPanel.get("passengerButtonContainer").add(passengerBtn);
-		RootPanel.get("errorLabelContainer").add(errorLabel);
+		RootPanel.get("buttonsContainer").add(buttonsPanel);
 		RootPanel.get("tabPanelContainer").add(tabPanel);
+		RootPanel.get("refreshButtonContainer").add(refreshBtn);
 	}
 	
+	
+	//jQuery module - Login Panel
 	private static native void renderLogin() /*-{
 	 $wnd.jQuery(function ($) {
 			$("#basic-modal-content").modal({onOpen: function (dialog) {
@@ -680,6 +165,39 @@ public class WatCarpool implements EntryPoint {
 	
 	});
 }-*/;
-	 
+	
+	/*
+	 * Helper Methods
+	 */
+	 private MultiWordSuggestOracle initSuggestions()
+	 {
+			/*
+	    	 * Load Suggestion Oracles
+	    	 */
+		   final MultiWordSuggestOracle oracle = new MultiWordSuggestOracle();
+	       suggestionService.getSuggestions(loginInfo.getEmailAddress(),new AsyncCallback<List<String>>() {
+	  	      public void onFailure(Throwable error) {
+	  	    	  Window.alert("Request remote service failed...");
+	  	    	  error.printStackTrace();
+	  	      }
+
+	  	      public void onSuccess(List<String> suggestions) {
+
+	  	        if(suggestions.size()!=0) {
+	  	         
+	  	        String []phones = new String[suggestions.size()];
+	  	        suggestions.toArray(phones);
+	  	          for (int i = 0; i < phones.length; ++i) {
+	  	            oracle.add(phones[i]);
+	  	          }
+	           
+	   	        
+	  	        } else {
+	               noSuggestions=true;   	
+	  	        }
+	  	      }
+	    	});
+	       return oracle;
+	 }
 	  
 }

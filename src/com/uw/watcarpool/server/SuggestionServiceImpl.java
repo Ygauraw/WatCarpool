@@ -48,7 +48,7 @@ public class SuggestionServiceImpl extends RemoteServiceServlet implements
 		String UUID=null;
     	while (iterator.hasNext()) {
     		ContactInfo c = iterator.next();
-    	    if (c._phone.equalsIgnoreCase(phone.trim()))
+    	    if ((c._phone.equalsIgnoreCase(phone.trim())) &&(c._email.equalsIgnoreCase(email)))
     	    {
     	    	exist=true;   
     	    }
