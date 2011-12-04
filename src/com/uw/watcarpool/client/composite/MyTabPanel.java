@@ -2,6 +2,8 @@ package com.uw.watcarpool.client.composite;
 
 import java.util.Comparator;
 import java.util.List;
+
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.TextColumn;
@@ -140,7 +142,7 @@ public class MyTabPanel  extends Composite{
 		dTable.addColumn(dDropoffCol, "Dropoff Location");
 		dTable.addColumn(dSpotsCol, "Available Spots");
 		dTable.setTitle("Available Carpools");
-		
+		dTable.setColumnWidth(dDateTimeCol, 16.0, Unit.PCT);
 		// attach the datasource to the drivers table
 		driverDataProvider.addDataDisplay(dTable);
         // Hide the drivers table when there is no data 
@@ -193,7 +195,6 @@ public class MyTabPanel  extends Composite{
 	}
 	
 
-	@SuppressWarnings("unused")
 	private void loadPassengersTable(final DataStoreServiceAsync dataStoreService, final ListDataProvider<Passenger> passengerDataProvider,
 			final ListDataProvider<Booking> bookingDataProvider,final LoginInfo loginInfo, final DateBox carpoolDate, final TextBox dropoffLoc)
 	{
@@ -242,7 +243,7 @@ public class MyTabPanel  extends Composite{
 		pTable.addColumn(pDropoffCol, "Dropoff Location");
 		pTable.addColumn(pSpotsCol, "# of Passengers");
 		pTable.setTitle("Available Passengers");
-		
+		pTable.setColumnWidth(pDateTimeCol, 16.0, Unit.PCT);
 		// attach the datasource to the passengers table
 		passengerDataProvider.addDataDisplay(pTable);
         // Hide the passengers table when there is no data 
@@ -313,35 +314,25 @@ public class MyTabPanel  extends Composite{
 		TextColumn<Booking> driverContactCol = new TextColumn<Booking>() {
 		      @Override
 		      public String getValue(Booking b) {
-		        return b._driver._contact;
+		    	StringBuilder sb = new StringBuilder();
+		    	sb.append(b._driver._userId+"\n");
+		    	sb.append(b._driver._contact);
+		        return sb.toString();
 		      }
 		    };
 		driverContactCol.setSortable(true);
-		
-		TextColumn<Booking> driverEmailCol = new TextColumn<Booking>() {
-		      @Override
-		      public String getValue(Booking b) {
-		        return b._driver._userId;
-		      }
-		    };
-		driverEmailCol.setSortable(true);
     
 		TextColumn<Booking> passengerContactCol = new TextColumn<Booking>() {
 		      @Override
 		      public String getValue(Booking b) {
-		        return b._passenger._contact;
+	    	  StringBuilder sb = new StringBuilder();
+		      sb.append(b._passenger._userId+"\n");
+		      sb.append(b._passenger._contact);
+		      return sb.toString();
+		     
 		      }
 		    };
 		passengerContactCol.setSortable(true);
-		
-		TextColumn<Booking> passengerEmailCol = new TextColumn<Booking>() {
-		      @Override
-		      public String getValue(Booking b) {
-		        return b._passenger._userId;
-		      }
-		    };
-		passengerEmailCol.setSortable(true);
-
 	    TextColumn<Booking> pickupCol = new TextColumn<Booking>() {
 		      @Override
 		      public String getValue(Booking b) {
@@ -396,17 +387,18 @@ public class MyTabPanel  extends Composite{
 		bTable.addColumnSortHandler(driverContactSortHandler);
 		
 		// Add those columns to the drivers' table
-		bTable.addColumn(carpoolDateCol, "Carppol Date");
-		bTable.addColumn(driverContactCol, "Driver's Contact #");
-		bTable.addColumn(driverEmailCol, "Driver's Email");
-		bTable.addColumn(passengerContactCol, "Passenger's Contact #");
-		bTable.addColumn(passengerEmailCol, "Passenger's Email");
+		bTable.addColumn(carpoolDateCol, "Carpool Date");
+		bTable.addColumn(driverContactCol, "Driver's Contacts");
+		bTable.addColumn(passengerContactCol, "Passenger's Contacts");
 		bTable.addColumn(pickupCol, "Pickup Location");
 		bTable.addColumn(dropoffCol, "Dropoff Location");
 		bTable.addColumn(numSeatsCol, "Available Spots");
 		bTable.addColumn(numPassengersCol, "# of Passenger");
 		bTable.setTitle("My Pending Bookings");
 		bTable.setVisible(true);
+		bTable.setColumnWidth(carpoolDateCol, 16.0, Unit.PCT);
+		bTable.setColumnWidth(driverContactCol, 15.0, Unit.PCT);
+		bTable.setColumnWidth(passengerContactCol, 15.0, Unit.PCT);
 		// Create a data provider.
 		bookingDataProvider.addDataDisplay(bTable);
 		
