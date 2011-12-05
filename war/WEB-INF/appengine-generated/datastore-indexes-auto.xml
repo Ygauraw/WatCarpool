@@ -1,4 +1,17 @@
-<!-- Indices written at Sun, 4 Dec 2011 06:15:30 UTC -->
+<!-- Indices written at Mon, 5 Dec 2011 04:27:40 UTC -->
 
-<datastore-indexes/>
+<datastore-indexes>
 
+    <!-- Used 1 time in query history -->
+    <datastore-index kind="Passenger" ancestor="false" source="auto">
+        <property name="_dropoffLoc" direction="asc"/>
+        <property name="_spots" direction="asc"/>
+    </datastore-index>
+
+    <!-- Used 3 times in query history -->
+    <datastore-index kind="Driver" ancestor="false" source="auto">
+        <property name="_dropoffLoc" direction="asc"/>
+        <property name="_spots" direction="asc"/>
+    </datastore-index>
+
+</datastore-indexes>

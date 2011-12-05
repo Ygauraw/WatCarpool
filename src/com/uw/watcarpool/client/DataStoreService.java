@@ -11,4 +11,5 @@ public interface DataStoreService extends RemoteService {
 	String updateDrivers(String dUUID, Date date, String userId, String dropoffLoc) throws IllegalArgumentException;
 	String updatePassengers(String pUUID, Date date, String userId, String dropoffLoc) throws IllegalArgumentException;
 	List<Booking> getBookings(String email) throws IllegalArgumentException;
+	String deleteBooking(String matchId) throws IllegalArgumentException;
 }

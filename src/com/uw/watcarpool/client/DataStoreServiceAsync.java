@@ -20,4 +20,7 @@ public interface DataStoreServiceAsync {
 	
 	void getBookings(String email, AsyncCallback<List<Booking>> callback)
 			throws IllegalArgumentException;
+	void deleteBooking(String matchId, AsyncCallback<String> callback)
+			throws IllegalArgumentException;
+	
 }

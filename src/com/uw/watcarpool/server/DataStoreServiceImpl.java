@@ -15,6 +15,7 @@ import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.uw.watcarpool.client.Booking;
 import com.uw.watcarpool.client.DataStoreService;
+import com.uw.watcarpool.client.Deal;
 import com.uw.watcarpool.client.Driver;
 import com.uw.watcarpool.client.Match;
 import com.uw.watcarpool.client.Passenger;
@@ -28,6 +29,7 @@ public class DataStoreServiceImpl extends RemoteServiceServlet implements
 		ObjectifyService.register(Match.class);
 	    ObjectifyService.register(Passenger.class);
 	    ObjectifyService.register(Driver.class);
+	    ObjectifyService.register(Deal.class);
 		}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -199,10 +201,42 @@ public class DataStoreServiceImpl extends RemoteServiceServlet implements
     		Passenger p = pofy.get(Passenger.class,m._passenger);
     	    if (d._userId.equalsIgnoreCase(email) || p._userId.equalsIgnoreCase(email))
     	    {
-    	    	myBookings.add(new Booking(d,p));
+    	    	myBookings.add(new Booking(m._UUID.toString(), d,p));
     	    }
     	}
     	return myBookings;
+	
+	}
+    
+    public String deleteBooking(String matchId)
+	{
+    	
+     	Objectify mfy = ObjectifyService.begin();
+    	Objectify dofy = ObjectifyService.begin();
+    	Objectify pofy = ObjectifyService.begin();
+    	Objectify deofy = ObjectifyService.begin();
+    	
+    	Match m = mfy.get(Match.class, new Long(matchId));
+    	Driver d= dofy.get(Driver.class,m._driver);
+
+    	Passenger p = pofy.get(Passenger.class,m._passenger);
+    	// Update Available Spots
+    	d._spots=d._spots-p._spots;
+    	if (d._spots==0)
+    	{
+    	   dofy.delete(Driver.class,m._driver);
+    	}
+    	else
+    	{
+    		dofy.put(d); // Update the corresponding record
+    	}
+    	Deal deal = new Deal(d._date,d._contact,d._userId,p._contact,p._userId,d._dropoffLoc,d._pickupLoc);
+    	assert deal._UUID != null;
+    	deofy.put(deal);
+    	pofy.delete(Passenger.class,m._passenger);
+    	mfy.delete(Match.class,m._UUID);
+    	
+    	return deal._UUID.toString();
 	
 	}
 	 

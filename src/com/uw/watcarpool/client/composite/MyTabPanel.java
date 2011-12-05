@@ -3,9 +3,14 @@ package com.uw.watcarpool.client.composite;
 import java.util.Comparator;
 import java.util.List;
 
+import com.google.gwt.cell.client.AbstractEditableCell;
+import com.google.gwt.cell.client.ActionCell;
+import com.google.gwt.cell.client.Cell;
+import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
 import com.google.gwt.user.client.Window;
@@ -167,7 +172,14 @@ public class MyTabPanel  extends Composite{
 		  							}
 
 		  							public void onSuccess(String uuid) {
+		  								if(uuid!=null)
+		  								{
 		  								Window.alert("The driver has been notified. Please keep your reference id: "+uuid);
+		  								}
+		  								else
+		  								{
+		  							    Window.alert("Oops, the request to contact the driver failed");
+		  								}
 		  							}
 		  						});
 		  		    	dataStoreService.getBookings(loginInfo.getEmailAddress(), new AsyncCallback<List<Booking>>() {
@@ -268,7 +280,14 @@ public class MyTabPanel  extends Composite{
 		  							}
 
 		  							public void onSuccess(String uuid) {
+		  								if (uuid!=null)
+		  								{
 		  								Window.alert("The passenger has been notified. Please keep your reference id: "+uuid);
+		  								}
+		  								else
+		  								{
+		  								 Window.alert("Oops, the request to contact the passenger failed");
+		  								}
 		  							}
 		  						});
 		  		    	dataStoreService.getBookings(loginInfo.getEmailAddress(), new AsyncCallback<List<Booking>>() {
@@ -362,7 +381,7 @@ public class MyTabPanel  extends Composite{
 		      }
 		    };
 		numPassengersCol.setSortable(true);
- 
+		
 		// Add sorting for the Carpool Date column
 	   ListHandler<Booking> carpoolDateSortHandler = new ListHandler<Booking>(bookingDataProvider.getList());
 	   carpoolDateSortHandler.setComparator(carpoolDateCol, new Comparator<Booking>() {
@@ -394,6 +413,39 @@ public class MyTabPanel  extends Composite{
 		bTable.addColumn(dropoffCol, "Dropoff Location");
 		bTable.addColumn(numSeatsCol, "Available Spots");
 		bTable.addColumn(numPassengersCol, "# of Passenger");
+		// Add Confirm Action Button Column
+		addColumn(new ActionCell<Booking>("Confirm", new ActionCell.Delegate<Booking>() {
+	      @Override
+	      public void execute(final Booking b) {
+	    	  // Update the Database 
+			  dataStoreService.deleteBooking(b._matchId, new AsyncCallback<String>() {
+					public void onFailure(Throwable caught) {
+						caught.printStackTrace();
+						
+					}
+
+					public void onSuccess(String dealID) {
+						if (dealID!=null)
+						{
+						 // Update the GUI
+							 deleteBookingRow(b, bookingDataProvider);
+							 Window.alert("The booking has been confirm. Pease keep the confirmation ID: "+dealID);
+						}
+						else
+						{
+							Window.alert("Oops, updating the database failed.");
+						}
+					}
+				});
+	    	 
+	      }
+	    }), "Action", new GetValue<Booking>() {
+	      @Override
+	      public Booking getValue(Booking b) {
+	        return b;
+	      }
+	    }, null);
+		
 		bTable.setTitle("My Pending Bookings");
 		bTable.setVisible(true);
 		bTable.setColumnWidth(carpoolDateCol, 16.0, Unit.PCT);
@@ -414,4 +466,41 @@ public class MyTabPanel  extends Composite{
 					}
 				});
 	}
+	// Helper Methods
+	// Add a new column to the bTable
+	 private <C> Column<Booking, C> addColumn(Cell<C> cell, String headerText,
+		      final GetValue<C> getter, FieldUpdater<Booking, C> fieldUpdater) {
+		    Column<Booking, C> column = new Column<Booking, C>(cell) {
+		      @Override
+		      public C getValue(Booking object) {
+		        return getter.getValue(object);
+		      }
+		    };
+		    column.setFieldUpdater(fieldUpdater);
+		    if (cell instanceof AbstractEditableCell<?, ?>) {
+		      //editableCells.add((AbstractEditableCell<?, ?>) cell);
+		    }
+		   bTable.addColumn(column, headerText);
+		    return column;
+		  }
+	  /**
+	   * Get a cell value from a record.
+	   * 
+	   * @param <C> the cell type
+	   */
+	  private static interface GetValue<C> {
+	    C getValue(Booking b);
+	  }
+	 
+	  // Delete the row
+	  private void deleteBookingRow(Booking b, ListDataProvider<Booking> bookingDataProvider)
+	  {
+		  
+		  // Update the GUI
+		  List<Booking> list = bookingDataProvider.getList();
+		  int indexOf = list.indexOf(b);
+		  list.remove(indexOf);
+		  bookingDataProvider.refresh();
+
+	  }
    }

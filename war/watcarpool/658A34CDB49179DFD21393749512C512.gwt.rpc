@@ -2,8 +2,8 @@ com.google.gwt.i18n.shared.impl.DateRecord, true, true, true, true, com.google.g
 com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException, true, true, true, true, com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException/3936916533, 3936916533
 com.google.gwt.user.client.rpc.RpcTokenException, true, true, false, false, com.google.gwt.user.client.rpc.RpcTokenException/2345075298, 2345075298
 com.google.gwt.user.client.rpc.XsrfToken, false, false, true, true, com.google.gwt.user.client.rpc.XsrfToken/4254043109, 4254043109
-com.uw.watcarpool.client.Booking, true, true, false, false, com.uw.watcarpool.client.Booking/1901282938, 1901282938
-[Lcom.uw.watcarpool.client.Booking;, true, true, false, false, [Lcom.uw.watcarpool.client.Booking;/966710676, 966710676
+com.uw.watcarpool.client.Booking, true, true, false, false, com.uw.watcarpool.client.Booking/752588035, 752588035
+[Lcom.uw.watcarpool.client.Booking;, true, true, false, false, [Lcom.uw.watcarpool.client.Booking;/18968598, 18968598
 com.uw.watcarpool.client.DataStoreService, false, false, false, false, _, 1020571935
 com.uw.watcarpool.client.Driver, true, true, false, false, com.uw.watcarpool.client.Driver/2267157060, 2267157060
 [Lcom.uw.watcarpool.client.Driver;, true, true, false, false, [Lcom.uw.watcarpool.client.Driver;/1215211594, 1215211594
