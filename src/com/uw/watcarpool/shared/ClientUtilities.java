@@ -1,7 +1,6 @@
 package com.uw.watcarpool.shared;
 
 import java.util.List;
-
 import com.google.gwt.view.client.ListDataProvider;
 import com.uw.watcarpool.client.Booking;
 import com.uw.watcarpool.client.Driver;
@@ -49,5 +48,4 @@ public class ClientUtilities {
 		    
 	 }
 	 
-	
 }

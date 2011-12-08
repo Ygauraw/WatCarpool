@@ -20,11 +20,11 @@ public class Passenger implements Serializable {
  public int _spots;
  public String _userId;
  public boolean _pending;
- public boolean _matched;
+ public String _detail;
  
  @SuppressWarnings("unused")
 private Passenger(){};
- public Passenger (String contact, Date date, String pickupLoc, String dropoffLoc, int spots,  String userId)
+ public Passenger (String contact, Date date, String pickupLoc, String dropoffLoc, int spots,  String userId, String detail)
  {
      this._timestamp=new Date();
 	 this._contact=contact;
@@ -34,6 +34,6 @@ private Passenger(){};
 	 this._spots=spots;
 	 this._userId= userId;
 	 this._pending=false;
-	 this._matched=false;
+	 this._detail=detail;
  }
 }

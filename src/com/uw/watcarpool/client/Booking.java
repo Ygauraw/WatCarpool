@@ -13,14 +13,15 @@ public class Booking implements Serializable {
 	    public String _matchId;
 	    public Driver _driver;
 	    public Passenger _passenger;
+	    public String _bookerEmail;
 	    @SuppressWarnings("unused")
 		private Booking(){};
-	    public Booking (String matchId, Driver driver, Passenger passenger)
+	    public Booking (String matchId, Driver driver, Passenger passenger, String bookerEmail)
 	    {
 	    	this._driver=driver;
 	    	this._passenger=passenger;
 	    	this._matchId=matchId; 
-	    
+	        this._bookerEmail=bookerEmail;
 	    }
 
 }

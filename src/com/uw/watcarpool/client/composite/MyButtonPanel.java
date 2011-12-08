@@ -35,11 +35,15 @@ public class MyButtonPanel  extends Composite{
 	final Label errorLabel = new Label();
 	final Button driverCloseBtn = new Button("Close");
 	final TextBox pickupLoc = new TextBox();
+	final TextBox departureLoc = new TextBox();
 	final TextBox availSpots = new TextBox();
 	final Button passengerCloseBtn = new Button("Close");
 	final TextBox numPassengers = new TextBox();
 	final DialogBox driverDialog = new DialogBox();
 	final Button driverSubmitBtn = new Button("Go");
+	final TextBox driverPriceBox = new TextBox();
+	final TextBox driverCommentBox = new TextBox();
+	final TextBox passengerCommentBox = new TextBox();
 	final VerticalPanel driverDialogPanel = new VerticalPanel();
 	final HorizontalPanel driverButtonPanel = new HorizontalPanel();
 	final DialogBox passengerDialog = new DialogBox();
@@ -65,12 +69,16 @@ public class MyButtonPanel  extends Composite{
 	        // Init Driver Input Panel
 			driverDialogPanel.add(new HTML("<b>Date/Time:</b><br>"));
 			driverDialogPanel.add(carpoolDate);
-		    driverDialogPanel.add(new HTML("<br><b>Pickup Location:</b><br>"));
+		    driverDialogPanel.add(new HTML("<br><b>Pickup Region:</b><br>"));
 		    driverDialogPanel.add(pickupLoc);	
-		    driverDialogPanel.add(new HTML("<br><b>Drop-off Location:</b><br>"));
+		    driverDialogPanel.add(new HTML("<br><b>Dropoff Region:</b><br>"));
 		    driverDialogPanel.add(dropoffLoc);
 			driverDialogPanel.add(new HTML("<br><b>Available Spots:</b><br>"));
 			driverDialogPanel.add(availSpots);
+			driverDialogPanel.add(new HTML("<br><b>Price $:</b><br>"));
+			driverDialogPanel.add(driverPriceBox);
+			driverDialogPanel.add(new HTML("<br><b>Details:</b><br>"));
+			driverDialogPanel.add(driverCommentBox);
 			
 			// Add components to their corresponding panels
 			driverButtonPanel.add(driverSubmitBtn);
@@ -89,11 +97,15 @@ public class MyButtonPanel  extends Composite{
 			
 			// Init Passenger Input Panel
 			passengerDialogPanel.add(new HTML("<b>Date/Time:</b><br>"));	
-			passengerDialogPanel.add(tripDate);		
-			passengerDialogPanel.add(new HTML("<br><b>Drop-off Location:</b><br>"));
+			passengerDialogPanel.add(tripDate);	
+			passengerDialogPanel.add(new HTML("<br><b>Pickup Region:</b><br>"));
+			passengerDialogPanel.add(departureLoc);
+			passengerDialogPanel.add(new HTML("<br><b>Dropoff Region:</b><br>"));
 			passengerDialogPanel.add(destination);
 			passengerDialogPanel.add(new HTML("<br><b># of Passengers:</b><br>"));
 			passengerDialogPanel.add(numPassengers);
+			passengerDialogPanel.add(new HTML("<br><b>Details:</b><br>"));
+			passengerDialogPanel.add(passengerCommentBox);
 					
 			
 			// Add components to their corresponding panels
@@ -226,7 +238,7 @@ public class MyButtonPanel  extends Composite{
 						driverBtn.setEnabled(false);
 						
 						dataStoreService.checkPassengers("offering",contactField.getText(),contactField.getText(), carpoolDate.getValue(),pickupLoc.getText(), 
-								dropoffLoc.getText(),Integer.parseInt(availSpots.getText()),
+								dropoffLoc.getText(),Integer.parseInt(availSpots.getText()), Integer.parseInt(driverPriceBox.getText()), driverCommentBox.getText(),
 								new AsyncCallback<List<Passenger>>() {
 									public void onFailure(Throwable caught) {
 										// Show the RPC error message to the user
@@ -278,8 +290,8 @@ public class MyButtonPanel  extends Composite{
 						// Then, we send the input to the server.
 						passengerBtn.setEnabled(false);
 		
-						dataStoreService.checkDrivers("seeking",contactField.getText(),contactField.getText(), tripDate.getValue(),"NA", 
-								destination.getText(),Integer.parseInt(numPassengers.getText()),
+						dataStoreService.checkDrivers("seeking",contactField.getText(),contactField.getText(), tripDate.getValue(),departureLoc.getText(), 
+								destination.getText(),Integer.parseInt(numPassengers.getText()), passengerCommentBox.getText(),
 								new AsyncCallback<List<Driver>>() {
 									public void onFailure(Throwable caught) {
 										// Show the RPC error message to the user

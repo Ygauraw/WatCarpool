@@ -17,6 +17,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.datepicker.client.DateBox;
@@ -42,23 +43,23 @@ public class MyTabPanel  extends Composite{
 	
 	public MyTabPanel(final DataStoreServiceAsync dataStoreService, final ListDataProvider<Driver> driverDataProvider,
 			final ListDataProvider<Passenger> passengerDataProvider,final ListDataProvider<Booking> bookingDataProvider,final LoginInfo loginInfo, final DateBox tripDate,final DateBox carpoolDate, 
-			final TextBox destination, final TextBox dropoffLoc)
+			final TextBox destination, final TextBox dropoffLoc, final SuggestBox contactNumber)
     {
 		// Initialize Tab Panel
 		initWidget(tabPanel);
 		tabPanel.setAnimationEnabled(true);
 		tabPanel.setVisible(true);
-	    tabPanel.add(dTable, "Available Drivers");
-	    tabPanel.add(pTable, "Available Passengers");
-	    tabPanel.add(new HTML("2"),"Manage My Carpools");
-	    tabPanel.add(bTable, "Manage My Bookings");
+	    tabPanel.add(dTable, "Fetched Drivers");
+	    tabPanel.add(pTable, "Fetched Passengers");
+	    tabPanel.add(new HTML("2"),"My Active Listings");
+	    tabPanel.add(bTable, "My Pending Bookings");
 	    tabPanel.setWidth("1200px");
 		tabPanel.selectTab(0);
 		
 		// Load Drivers Table
-		loadDriversTable(dataStoreService, driverDataProvider,bookingDataProvider,loginInfo, tripDate, destination);
+		loadDriversTable(dataStoreService, driverDataProvider,bookingDataProvider,loginInfo, tripDate, destination, contactNumber);
 		// Load Passengers Table
-		loadPassengersTable(dataStoreService, passengerDataProvider,bookingDataProvider,loginInfo, carpoolDate,  dropoffLoc);
+		loadPassengersTable(dataStoreService, passengerDataProvider,bookingDataProvider,loginInfo, carpoolDate,  dropoffLoc, contactNumber);
 		// Load Bookings Table
 		loadBookingsTable(dataStoreService, bookingDataProvider,loginInfo);
 		
@@ -92,7 +93,7 @@ public class MyTabPanel  extends Composite{
 	 * Sub GUI Components
 	 */
 	private void loadDriversTable(final DataStoreServiceAsync dataStoreService, final ListDataProvider<Driver> driverDataProvider, final ListDataProvider<Booking> bookingDataProvider,
-			final LoginInfo loginInfo, final DateBox tripDate, final TextBox destination)
+			final LoginInfo loginInfo, final DateBox tripDate, final TextBox destination, final SuggestBox contactNumber)
 	{
 		/*
 		 *  Create Columns for Drivers' Table
@@ -120,7 +121,7 @@ public class MyTabPanel  extends Composite{
 	    TextColumn<Driver> dPickupCol = new TextColumn<Driver>() {
 	    	@Override
 	    	public String getValue(Driver d) {
-	    		return d._pickupLoc.toString();
+	    		return d._pickupLoc;
 	    	}
 	    };
 	    
@@ -128,7 +129,7 @@ public class MyTabPanel  extends Composite{
 		TextColumn<Driver> dDropoffCol = new TextColumn<Driver>() {
 		      @Override
 		      public String getValue(Driver d) {
-		        return d._dropoffLoc.toString();
+		        return d._dropoffLoc;
 		      }
 		    };
 		    
@@ -140,12 +141,28 @@ public class MyTabPanel  extends Composite{
 		      }
 		    };
 		    
+	    // Price Column
+		TextColumn<Driver> dPriceCol = new TextColumn<Driver>() {
+		      @Override
+		      public String getValue(Driver d) {
+		        return d._price+"";
+		      }
+		    };
+	    // Details Column
+		TextColumn<Driver> dCommentCol = new TextColumn<Driver>() {
+		      @Override
+		      public String getValue(Driver d) {
+		        return d._detail;
+		      }
+		    };
 		// Add those columns to the drivers' table
-		dTable.addColumn(dUUIDCol, "ID");
+
 		dTable.addColumn(dDateTimeCol, "Carpool Date");
-		dTable.addColumn(dPickupCol, "Pickup Location");
-		dTable.addColumn(dDropoffCol, "Dropoff Location");
+		dTable.addColumn(dPickupCol, "Pickup Region");
+		dTable.addColumn(dDropoffCol, "Dropoff Region");
 		dTable.addColumn(dSpotsCol, "Available Spots");
+		dTable.addColumn(dPriceCol, "Price($)");
+		dTable.addColumn(dCommentCol, "Details");
 		dTable.setTitle("Available Carpools");
 		dTable.setColumnWidth(dDateTimeCol, 16.0, Unit.PCT);
 		// attach the datasource to the drivers table
@@ -165,7 +182,7 @@ public class MyTabPanel  extends Composite{
 		              if (value != null && value) {
 		            	final Driver d = ssm.getSelectedObject();
 		  		    	dataStoreService.updateDrivers(d._UUID.toString(),tripDate.getValue(), loginInfo.getEmailAddress(),destination.getText().toUpperCase().trim(),
-		  						new AsyncCallback<String>() {
+		  						contactNumber.getText(), new AsyncCallback<String>() {
 		  							public void onFailure(Throwable caught) {
 		  								
 		  								caught.printStackTrace();
@@ -175,6 +192,7 @@ public class MyTabPanel  extends Composite{
 		  								if(uuid!=null)
 		  								{
 		  								Window.alert("The driver has been notified. Please keep your reference id: "+uuid);
+		  								deleteDriverRow(d, driverDataProvider);
 		  								}
 		  								else
 		  								{
@@ -208,7 +226,7 @@ public class MyTabPanel  extends Composite{
 	
 
 	private void loadPassengersTable(final DataStoreServiceAsync dataStoreService, final ListDataProvider<Passenger> passengerDataProvider,
-			final ListDataProvider<Booking> bookingDataProvider,final LoginInfo loginInfo, final DateBox carpoolDate, final TextBox dropoffLoc)
+			final ListDataProvider<Booking> bookingDataProvider,final LoginInfo loginInfo, final DateBox carpoolDate, final TextBox dropoffLoc, final SuggestBox contactNumber)
 	{
 		/*
 		 *  Create Columns for Passengers' Table
@@ -232,12 +250,18 @@ public class MyTabPanel  extends Composite{
 			      }
 			    };
 			    
-	    
+	 // Dropoff Location Column
+		TextColumn<Passenger> pPickupCol = new TextColumn<Passenger>() {
+		      @Override
+		      public String getValue(Passenger p) {
+		        return p._pickupLoc;
+		      }
+		    };
 	    // Dropoff Location Column
 		TextColumn<Passenger> pDropoffCol = new TextColumn<Passenger>() {
 		      @Override
 		      public String getValue(Passenger p) {
-		        return p._dropoffLoc.toString();
+		        return p._dropoffLoc;
 		      }
 		    };
 		    
@@ -248,11 +272,19 @@ public class MyTabPanel  extends Composite{
 		        return p._spots+"";
 		      }
 		    };
+	    // Details Location Column
+		TextColumn<Passenger> pCommentCol = new TextColumn<Passenger>() {
+		      @Override
+		      public String getValue(Passenger p) {
+		        return p._detail;
+		      }
+		    };
 		    
 		// Add those columns to the drivers' table
-		pTable.addColumn(pUUIDCol, "ID");
+		
 		pTable.addColumn(pDateTimeCol, "Carpool Date");
-		pTable.addColumn(pDropoffCol, "Dropoff Location");
+		pTable.addColumn(pPickupCol, "Pickup Region");
+		pTable.addColumn(pDropoffCol, "Dropoff Region");
 		pTable.addColumn(pSpotsCol, "# of Passengers");
 		pTable.setTitle("Available Passengers");
 		pTable.setColumnWidth(pDateTimeCol, 16.0, Unit.PCT);
@@ -273,7 +305,7 @@ public class MyTabPanel  extends Composite{
 		              if (value != null && value) {
 		            	final Passenger p = ssm.getSelectedObject();
 		  		    	dataStoreService.updatePassengers(p._UUID.toString(),carpoolDate.getValue(), loginInfo.getEmailAddress(),dropoffLoc.getText().toUpperCase().trim(),
-		  						new AsyncCallback<String>() {
+		  						contactNumber.getText(), new AsyncCallback<String>() {
 		  							public void onFailure(Throwable caught) {
 		  								
 		  								caught.printStackTrace();
@@ -283,6 +315,7 @@ public class MyTabPanel  extends Composite{
 		  								if (uuid!=null)
 		  								{
 		  								Window.alert("The passenger has been notified. Please keep your reference id: "+uuid);
+		  								deletePassengerRow(p, passengerDataProvider);
 		  								}
 		  								else
 		  								{
@@ -366,21 +399,34 @@ public class MyTabPanel  extends Composite{
 		    };
 		dropoffCol.setSortable(true);
 
-	    TextColumn<Booking> numSeatsCol = new TextColumn<Booking>() {
+	    TextColumn<Booking> spotsCol = new TextColumn<Booking>() {
 		      @Override
 		      public String getValue(Booking b) {
-		        return b._driver._spots+"";
+		        return  "Capacity: "+b._driver._capacity+"\n"+
+		        		"# of Passengers: "+b._passenger._spots+"\n";
+		        
+		        		
 		      }
 		    };
-		numSeatsCol.setSortable(true);
-
-	    TextColumn<Booking> numPassengersCol = new TextColumn<Booking>() {
+		spotsCol.setSortable(true);
+		
+		TextColumn<Booking> priceCol = new TextColumn<Booking>() {
 		      @Override
 		      public String getValue(Booking b) {
-		        return b._passenger._spots+"";
+		        return "$"+b._driver._price+"";
 		      }
 		    };
-		numPassengersCol.setSortable(true);
+		priceCol.setSortable(true);
+		
+		TextColumn<Booking> commentsCol = new TextColumn<Booking>() {
+		      @Override
+		      public String getValue(Booking b) {
+		        return "[Driver] "+b._driver._detail+"\n"+
+		               "[Passenger] "+b._passenger._detail+"\n";
+		        		
+		      }
+		    };
+		commentsCol.setSortable(true);
 		
 		// Add sorting for the Carpool Date column
 	   ListHandler<Booking> carpoolDateSortHandler = new ListHandler<Booking>(bookingDataProvider.getList());
@@ -407,18 +453,26 @@ public class MyTabPanel  extends Composite{
 		
 		// Add those columns to the drivers' table
 		bTable.addColumn(carpoolDateCol, "Carpool Date");
-		bTable.addColumn(driverContactCol, "Driver's Contacts");
-		bTable.addColumn(passengerContactCol, "Passenger's Contacts");
-		bTable.addColumn(pickupCol, "Pickup Location");
-		bTable.addColumn(dropoffCol, "Dropoff Location");
-		bTable.addColumn(numSeatsCol, "Available Spots");
-		bTable.addColumn(numPassengersCol, "# of Passenger");
+		bTable.addColumn(driverContactCol, "Driver");
+		bTable.addColumn(passengerContactCol, "Passenger");
+		bTable.addColumn(pickupCol, "Pickup Region");
+		bTable.addColumn(dropoffCol, "Dropoff Region");
+		bTable.addColumn(spotsCol, "Spots");
+		bTable.addColumn(priceCol, "Price");
+		bTable.addColumn(commentsCol, "Details");
 		// Add Confirm Action Button Column
 		addColumn(new ActionCell<Booking>("Confirm", new ActionCell.Delegate<Booking>() {
 	      @Override
 	      public void execute(final Booking b) {
+	    	  if (b._bookerEmail.equalsIgnoreCase(loginInfo.getEmailAddress()))
+	    	  {
+	    		Window.alert("Sorry, you cannot confirm your own booking, please wait for the counter party to confirm it.");
+	    	  }
+	    	  else
+	    	  {
+	          
 	    	  // Update the Database 
-			  dataStoreService.deleteBooking(b._matchId, new AsyncCallback<String>() {
+			  dataStoreService.deleteBooking(b._matchId, true, new AsyncCallback<String>() {
 					public void onFailure(Throwable caught) {
 						caught.printStackTrace();
 						
@@ -429,13 +483,38 @@ public class MyTabPanel  extends Composite{
 						{
 						 // Update the GUI
 							 deleteBookingRow(b, bookingDataProvider);
-							 Window.alert("The booking has been confirm. Pease keep the confirmation ID: "+dealID);
+							 Window.alert("The booking has been confirm ("+dealID+") Both the driver and passenger will be notified shortly. Please keep the confirmation ID for departure.");
 						}
 						else
 						{
 							Window.alert("Oops, updating the database failed.");
 						}
 					}
+				});
+	    	  }
+	      }
+	    }), "Action", new GetValue<Booking>() {
+	      @Override
+	      public Booking getValue(Booking b) {
+	        return b;
+	      }
+	    }, null);
+		
+		// Add Decline Action Button Column
+		addColumn(new ActionCell<Booking>("Delete", new ActionCell.Delegate<Booking>() {
+	      @Override
+	      public void execute(final Booking b) {
+	    	  // Update the Database 
+			  dataStoreService.deleteBooking(b._matchId,false, new AsyncCallback<String>() {
+					public void onFailure(Throwable caught) {
+						caught.printStackTrace();
+						
+					}
+
+					public void onSuccess(String dealID) {
+							 deleteBookingRow(b, bookingDataProvider);
+							 Window.alert("The pending booking has been deleted successfully.");
+						}
 				});
 	    	 
 	      }
@@ -445,12 +524,13 @@ public class MyTabPanel  extends Composite{
 	        return b;
 	      }
 	    }, null);
-		
 		bTable.setTitle("My Pending Bookings");
 		bTable.setVisible(true);
 		bTable.setColumnWidth(carpoolDateCol, 16.0, Unit.PCT);
 		bTable.setColumnWidth(driverContactCol, 15.0, Unit.PCT);
 		bTable.setColumnWidth(passengerContactCol, 15.0, Unit.PCT);
+		bTable.setColumnWidth(spotsCol, 8.0, Unit.PCT);
+		bTable.setColumnWidth(commentsCol, 15.0, Unit.PCT);
 		// Create a data provider.
 		bookingDataProvider.addDataDisplay(bTable);
 		
@@ -492,7 +572,7 @@ public class MyTabPanel  extends Composite{
 	    C getValue(Booking b);
 	  }
 	 
-	  // Delete the row
+	  // Delete the confirmed booking row
 	  private void deleteBookingRow(Booking b, ListDataProvider<Booking> bookingDataProvider)
 	  {
 		  
@@ -501,6 +581,28 @@ public class MyTabPanel  extends Composite{
 		  int indexOf = list.indexOf(b);
 		  list.remove(indexOf);
 		  bookingDataProvider.refresh();
+
+	  }
+	  // Delete clicked driver row
+	  private void deleteDriverRow(Driver d, ListDataProvider<Driver> driverDataProvider)
+	  {
+		  
+		  // Update the GUI
+		  List<Driver> list = driverDataProvider.getList();
+		  int indexOf = list.indexOf(d);
+		  list.remove(indexOf);
+		  driverDataProvider.refresh();
+
+	  }
+	  // Delete clicked passenger row
+	  private void deletePassengerRow(Passenger p, ListDataProvider<Passenger> passengerDataProvider)
+	  {
+		  
+		  // Update the GUI
+		  List<Passenger> list = passengerDataProvider.getList();
+		  int indexOf = list.indexOf(p);
+		  list.remove(indexOf);
+		  passengerDataProvider.refresh();
 
 	  }
    }

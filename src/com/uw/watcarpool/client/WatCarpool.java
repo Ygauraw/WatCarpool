@@ -124,7 +124,7 @@ public class WatCarpool implements EntryPoint {
 		
 		// Initialize the tabPanel
 		tabPanel = new  MyTabPanel(dataStoreService,driverDataProvider,passengerDataProvider,
-				bookingDataProvider,loginInfo, tripDate, carpoolDate, destination,dropoffLoc);
+				bookingDataProvider,loginInfo, tripDate, carpoolDate, destination,dropoffLoc, contactField);
 				
 		// Initialize the buttonsPanel
 		buttonsPanel = new  MyButtonPanel(dataStoreService, tabPanel, contactField, 

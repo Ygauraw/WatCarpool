@@ -18,11 +18,14 @@ public class Driver implements Serializable {
  public int _spots;
  public String _userId;
  public boolean _pending;
- public boolean _matched;
+ public int _capacity;
+ public int _numConfirmed;
+ public int _price;
+ public String _detail;
  
  @SuppressWarnings("unused")
 private Driver() {}
- public Driver( String contact, Date date, String pickupLoc, String dropoffLoc, int spots, String userId)
+ public Driver( String contact, Date date, String pickupLoc, String dropoffLoc, int spots, String userId, int price, String detail)
  {
      this._timestamp=new Date();
 	 this._contact=contact;
@@ -32,7 +35,10 @@ private Driver() {}
 	 this._spots=spots;
 	 this._userId=userId;
 	 this._pending=false;
-	 this._matched=false;
+	 this._capacity=spots;
+	 this._numConfirmed=0;
+	 this._price=price;
+	 this._detail=detail;
 	 
  }
 }
