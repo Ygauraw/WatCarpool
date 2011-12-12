@@ -14,6 +14,7 @@ import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.googlecode.objectify.Objectify;
@@ -214,7 +215,7 @@ public class DataStoreServiceImpl extends RemoteServiceServlet implements
 	        	try {
 	        		StringBuilder sb=new StringBuilder();
 	        		sb.append("Dear "+d._contact+":\n");
-	        		sb.append("You have a new pending booking for your carpool request on "+p._date.toString()+"\n");
+	        		sb.append("You have a new pending booking for your carpool request on "+p._date+"\n");
 	        		sb.append("Driver Contact #: "+p._contact+"\n");
 	        		sb.append("Dropoff Region: "+p._dropoffLoc+"\n");
 	        		sb.append("Details: "+p._detail+"\n");
@@ -257,7 +258,8 @@ public class DataStoreServiceImpl extends RemoteServiceServlet implements
 	
 	}
     
-    public String deleteBooking(String matchId, boolean isDeal)
+    @SuppressWarnings("deprecation")
+	public String deleteBooking(String matchId, boolean isDeal)
 	{
     	String ret=null;
      	Objectify mfy = ObjectifyService.begin();
@@ -290,12 +292,12 @@ public class DataStoreServiceImpl extends RemoteServiceServlet implements
     	StringBuilder sb = new StringBuilder();
     	sb.append("----------Carpool Confirmation Details----------\n");
     	sb.append("Confirmation ID: "+deal._UUID.toString()+"\n");
-    	sb.append("Carpool Provider: "+d._contact+"\n" );
-    	sb.append("Dropoff Region: "+d._dropoffLoc+"\n");
-    	sb.append("Pickup Location: "+d._pickupLoc+"\n");
-    	sb.append("Carpool Date/Time: "+d._date.toString()+"\n");
-    	sb.append("Price: $"+d._price+"\n");
+    	sb.append("Driver Contact: "+d._contact+"\n" );
     	sb.append("Passenger Contact: "+p._contact+"\n");
+    	sb.append("Dropoff Region: "+d._dropoffLoc+"\n");
+    	sb.append("Pickup Region: "+d._pickupLoc+"\n");
+    	sb.append( "Carpool Date/Time: "+d._date.toString()+"\n");
+    	sb.append("Price: $"+d._price+"\n");
     	sb.append("Driver's Comments: "+d._detail+"\n");
     	sb.append("Passenger's Comments: "+p._detail+"\n");
     	sb.append("\n");

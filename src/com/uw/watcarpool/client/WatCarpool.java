@@ -27,6 +27,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.MultiWordSuggestOracle;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SuggestBox;
@@ -62,8 +63,8 @@ public class WatCarpool implements EntryPoint {
 	final Button passengerBtn = new Button("Find a Carpool");
 	final DateBox carpoolDate = new DateBox();
 	final DateBox tripDate = new DateBox();
-	final TextBox dropoffLoc = new TextBox();
-	final TextBox destination = new TextBox();
+	final ListBox dropoffLoc = ClientUtilities.getLocationList();
+	final ListBox destination = ClientUtilities.getLocationList();
 	final Button refreshBtn = new Button("Refresh");
 	final ListDataProvider<Driver> driverDataProvider = new ListDataProvider<Driver>();
 	final ListDataProvider<Passenger> passengerDataProvider = new ListDataProvider<Passenger>();
@@ -123,13 +124,13 @@ public class WatCarpool implements EntryPoint {
 		contactField.setFocus(true);
 		
 		// Initialize the tabPanel
-		tabPanel = new  MyTabPanel(dataStoreService,driverDataProvider,passengerDataProvider,
-				bookingDataProvider,loginInfo, tripDate, carpoolDate, destination,dropoffLoc, contactField);
+		tabPanel = new  MyTabPanel(dataStoreService, driverDataProvider, passengerDataProvider,
+				bookingDataProvider, loginInfo, tripDate, carpoolDate, destination, dropoffLoc, contactField);
 				
 		// Initialize the buttonsPanel
 		buttonsPanel = new  MyButtonPanel(dataStoreService, tabPanel, contactField, 
-		suggestionService, loginInfo,driverDataProvider, passengerDataProvider, driverBtn, passengerBtn,
-		tripDate,carpoolDate, destination,dropoffLoc);
+		suggestionService, loginInfo,driverDataProvider, passengerDataProvider, driverBtn,passengerBtn,
+		tripDate, carpoolDate, destination, dropoffLoc);
 					
 		
 		// Add Refresh Button Handler

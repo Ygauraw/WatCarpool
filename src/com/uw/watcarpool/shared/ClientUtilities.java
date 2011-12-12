@@ -1,6 +1,8 @@
 package com.uw.watcarpool.shared;
 
 import java.util.List;
+
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.view.client.ListDataProvider;
 import com.uw.watcarpool.client.Booking;
 import com.uw.watcarpool.client.Driver;
@@ -47,5 +49,24 @@ public class ClientUtilities {
 		    }
 		    
 	 }
+	 
+	// ListBox for carpool destinations and origins
+	public static ListBox getLocationList()
+		{
+		    ListBox widget = new ListBox();
+		    widget.addItem("Waterloo");
+		    widget.addItem("Kitchener");
+		    widget.addItem("Toronto -North York");
+		    widget.addItem("Toronto -Scarborough");
+		    widget.addItem("Toronto -Richmond Hill");
+		    widget.addItem("Toronto -Markham");
+		    widget.addItem("Toronto -Newmarket");
+		    widget.addItem("Toronto -Downtown");
+		    widget.addItem("Toronto -Mississauga");
+		    widget.addItem("Toronto -Pearson Int'l Airport");
+		    widget.addItem("Toronto -Other");
+		    widget.setVisibleItemCount(1);
+		    return widget;
+		}
 	 
 }

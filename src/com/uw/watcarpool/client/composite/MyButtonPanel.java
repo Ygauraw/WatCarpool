@@ -15,7 +15,9 @@ import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.SuggestBox;
+import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.datepicker.client.DateBox;
@@ -34,16 +36,16 @@ public class MyButtonPanel  extends Composite{
 	final HorizontalPanel hPanel=new HorizontalPanel();
 	final Label errorLabel = new Label();
 	final Button driverCloseBtn = new Button("Close");
-	final TextBox pickupLoc = new TextBox();
-	final TextBox departureLoc = new TextBox();
+	final ListBox pickupLoc = ClientUtilities.getLocationList();
+	final ListBox departureLoc = ClientUtilities.getLocationList();
 	final TextBox availSpots = new TextBox();
 	final Button passengerCloseBtn = new Button("Close");
 	final TextBox numPassengers = new TextBox();
 	final DialogBox driverDialog = new DialogBox();
 	final Button driverSubmitBtn = new Button("Go");
 	final TextBox driverPriceBox = new TextBox();
-	final TextBox driverCommentBox = new TextBox();
-	final TextBox passengerCommentBox = new TextBox();
+	final TextArea driverCommentBox = new TextArea();
+	final TextArea passengerCommentBox = new TextArea();
 	final VerticalPanel driverDialogPanel = new VerticalPanel();
 	final HorizontalPanel driverButtonPanel = new HorizontalPanel();
 	final DialogBox passengerDialog = new DialogBox();
@@ -54,7 +56,7 @@ public class MyButtonPanel  extends Composite{
 	public MyButtonPanel(final DataStoreServiceAsync dataStoreService, final MyTabPanel tabPanel, 
 			final SuggestBox contactField, final SuggestionServiceAsync suggestionService, final LoginInfo loginInfo,
 			final ListDataProvider<Driver> driverDataProvider,final ListDataProvider<Passenger> passengerDataProvider, final Button driverBtn, final Button passengerBtn,
-			final DateBox tripDate,final DateBox carpoolDate, final TextBox destination, final TextBox dropoffLoc)
+			final DateBox tripDate,final DateBox carpoolDate, final ListBox destination, final ListBox dropoffLoc)
     {
 		    initWidget(hPanel);
 	       // Init Driver Components
@@ -78,6 +80,12 @@ public class MyButtonPanel  extends Composite{
 			driverDialogPanel.add(new HTML("<br><b>Price $:</b><br>"));
 			driverDialogPanel.add(driverPriceBox);
 			driverDialogPanel.add(new HTML("<br><b>Details:</b><br>"));
+			driverCommentBox.setHeight("70px");
+			driverCommentBox.setCharacterWidth(30);
+			driverCommentBox.setVisibleLines(5);
+			driverCommentBox.setText("Pickup Location: \n"+
+			                         "Dropoff Location: \n"+
+			                         "Vehicle Color: \n");		
 			driverDialogPanel.add(driverCommentBox);
 			
 			// Add components to their corresponding panels
@@ -105,6 +113,12 @@ public class MyButtonPanel  extends Composite{
 			passengerDialogPanel.add(new HTML("<br><b># of Passengers:</b><br>"));
 			passengerDialogPanel.add(numPassengers);
 			passengerDialogPanel.add(new HTML("<br><b>Details:</b><br>"));
+			passengerCommentBox.setHeight("70px");
+			passengerCommentBox.setCharacterWidth(30);
+			passengerCommentBox.setVisibleLines(5);
+			passengerCommentBox.setText("Pickup Location: \n"+
+					                    "Dropoff Location: \n"+
+					                    "# of Luggages: \n");
 			passengerDialogPanel.add(passengerCommentBox);
 					
 			
@@ -232,13 +246,14 @@ public class MyButtonPanel  extends Composite{
 		  	       	      }
 		  	         	});
 						// First, we validate the input.
-						errorLabel.setText("");
-						
+		        	    boolean validInputs = FieldVerifier.validateDriverInputs(carpoolDate, pickupLoc.getSelectedIndex(), dropoffLoc.getSelectedIndex(), availSpots.getText().trim(), driverPriceBox.getText().trim());
+		        	    if(validInputs)
+		        	    {
+		        	    errorLabel.setText("");
 						// Then, we send the input to the server.
-						driverBtn.setEnabled(false);
-						
-						dataStoreService.checkPassengers("offering",contactField.getText(),contactField.getText(), carpoolDate.getValue(),pickupLoc.getText(), 
-								dropoffLoc.getText(),Integer.parseInt(availSpots.getText()), Integer.parseInt(driverPriceBox.getText()), driverCommentBox.getText(),
+						driverBtn.setEnabled(false);		
+						dataStoreService.checkPassengers("offering",contactField.getText(),contactField.getText(), carpoolDate.getValue(),pickupLoc.getItemText(pickupLoc.getSelectedIndex()), 
+								dropoffLoc.getItemText(dropoffLoc.getSelectedIndex()),Integer.parseInt(availSpots.getText()), Integer.parseInt(driverPriceBox.getText()), driverCommentBox.getText(),
 								new AsyncCallback<List<Passenger>>() {
 									public void onFailure(Throwable caught) {
 										// Show the RPC error message to the user
@@ -267,7 +282,13 @@ public class MyButtonPanel  extends Composite{
 										
 									}
 								});
-					}		
+						}
+						else
+						{
+							// Cannot process request
+						}
+					}
+
 			});
 			
 			// Add a handler to passenger's submit button
@@ -286,12 +307,15 @@ public class MyButtonPanel  extends Composite{
 		  	       	      }
 		  	         	});
 						// First, we validate the input.
-						errorLabel.setText("");
+		        	  boolean validInputs = FieldVerifier.validatePassengerInputs(tripDate, departureLoc.getSelectedIndex(), destination.getSelectedIndex(), numPassengers.getText().trim());
+	        	    if(validInputs)
+	        	    {
+		        	   errorLabel.setText("");
 						// Then, we send the input to the server.
 						passengerBtn.setEnabled(false);
-		
-						dataStoreService.checkDrivers("seeking",contactField.getText(),contactField.getText(), tripDate.getValue(),departureLoc.getText(), 
-								destination.getText(),Integer.parseInt(numPassengers.getText()), passengerCommentBox.getText(),
+		              
+						dataStoreService.checkDrivers("seeking",contactField.getText(),contactField.getText(), tripDate.getValue(),departureLoc.getItemText(departureLoc.getSelectedIndex()), 
+								destination.getItemText(destination.getSelectedIndex()),Integer.parseInt(numPassengers.getText()), passengerCommentBox.getText(),
 								new AsyncCallback<List<Driver>>() {
 									public void onFailure(Throwable caught) {
 										// Show the RPC error message to the user
@@ -319,13 +343,17 @@ public class MyButtonPanel  extends Composite{
 										}
 									}
 								});
-
-					}		
+	        	    }
+	        	    else
+	        	    {
+	        	    	// Cannot process the request
+	        	    }
+				}		
 			});
     hPanel.add(driverBtn);
     hPanel.add(passengerBtn);
     hPanel.setVisible(true);
  }
 
-	
+  
 }

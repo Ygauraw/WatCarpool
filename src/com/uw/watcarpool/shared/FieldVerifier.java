@@ -1,6 +1,11 @@
 package com.uw.watcarpool.shared;
 
+import java.util.Date;
+
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.regexp.shared.RegExp;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.datepicker.client.DateBox;
 
 
 
@@ -49,4 +54,88 @@ public class FieldVerifier {
 		
 		return isValid;  
  }
+	public static boolean validateDriverInputs(DateBox datetime, int pickup, int dropoff, String spots, String price) {
+		boolean isValid = true;  
+	    StringBuilder sb =new StringBuilder();
+	    String expression = "^[-+]?[0-9]*\\.?[0-9]+$";  
+		RegExp regExp = RegExp.compile(expression);
+		if(datetime.getValue()!=null)
+		{
+		Date clientDate = zeroTime(datetime.getValue());
+		Date today = zeroTime(new Date());
+			if (clientDate.before(today) || datetime.getValue().toString().trim().substring(11,19).equalsIgnoreCase("12:00:00")||datetime.getValue()==null)
+			{
+			   isValid=false;
+			   sb.append("* Please input a valid and reasonable carpool datetime \n");
+			}
+		}
+		else
+		{
+			isValid=false;
+			sb.append("* Please select your carpool date \n");
+		}
+		if (pickup==dropoff)
+		{
+		   isValid=false; 
+		   sb.append("* Pickup and Dropoff regions cannot be the same \n");
+		}
+		if (!regExp.test(spots)||spots.length()==0)
+		{
+		  isValid=false;
+	     sb.append("* You must enter an integer in the Spots field \n");
+		}
+		if (!regExp.test(price)||price.length()==0)
+		{
+		  isValid=false;
+	      sb.append("* You must enter an integer in the Price field \n");
+		}
+		if (!isValid)
+		{
+			Window.alert(sb.toString());
+		}
+		
+		return isValid;  
+ }
+	public static boolean validatePassengerInputs(DateBox datetime, int pickup, int dropoff, String numPassengers) {
+		boolean isValid = true;  
+	    StringBuilder sb =new StringBuilder();
+	    String expression = "^[-+]?[0-9]*\\.?[0-9]+$";  
+		RegExp regExp = RegExp.compile(expression);
+		if(datetime.getValue()!=null)
+		{
+		Date clientDate = zeroTime(datetime.getValue());
+		Date today = zeroTime(new Date());
+			if (clientDate.before(today) || datetime.getValue().toString().trim().substring(11,19).equalsIgnoreCase("12:00:00")||datetime.getValue()==null)
+			{
+			   isValid=false;
+			   sb.append("* Please input a valid and reasonable carpool datetime \n");
+			}
+		}
+		else
+		{
+			isValid=false;
+			sb.append("* Please select your carpool date \n");
+		}
+		if (pickup==dropoff)
+		{
+		   isValid=false; 
+		   sb.append("* Pickup and Dropoff regions cannot be the same \n");
+		}
+		if (!regExp.test(numPassengers)||numPassengers.length()==0)
+		{
+		  isValid=false;
+	      sb.append("* You must enter an integer in the # of Passengers field \n");
+		}
+		
+		if (!isValid)
+		{
+			Window.alert(sb.toString());
+		}
+		return isValid;  
+ }
+	private static Date zeroTime(final Date date)
+	{
+	    return DateTimeFormat.getFormat("yyyyMMdd").parse(DateTimeFormat.getFormat("yyyyMMdd").format(date));
+	}
+
 }
